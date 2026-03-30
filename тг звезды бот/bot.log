@@ -1,0 +1,236 @@
+2026-03-30 13:30:46,595 - __main__ - INFO - 🚀 Бот запускается...
+2026-03-30 13:30:46,595 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 13:30:51,181 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 13:30:53,765 - __main__ - INFO - 🚀 Бот запускается...
+2026-03-30 13:30:53,766 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 13:30:54,055 - aiogram.dispatcher - INFO - Run polling for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 13:30:59,156 - aiogram.event - INFO - Update id=468524443 is handled. Duration 402 ms by bot id=7867924002
+2026-03-30 13:31:07,845 - aiogram.event - INFO - Update id=468524444 is handled. Duration 405 ms by bot id=7867924002
+2026-03-30 13:31:10,047 - aiogram.event - INFO - Update id=468524445 is handled. Duration 404 ms by bot id=7867924002
+2026-03-30 13:31:10,838 - __main__ - INFO - Fragment клиент успешно инициализирован
+2026-03-30 13:31:10,838 - __main__ - INFO - Ошибка получения адреса: 'FragmentClient' object has no attribute 'get_address'
+2026-03-30 13:31:11,257 - aiogram.event - INFO - Update id=468524446 is handled. Duration 419 ms by bot id=7867924002
+2026-03-30 13:31:17,600 - aiogram.event - INFO - Update id=468524447 is handled. Duration 418 ms by bot id=7867924002
+2026-03-30 13:31:19,070 - aiogram.event - INFO - Update id=468524448 is handled. Duration 398 ms by bot id=7867924002
+2026-03-30 13:31:20,977 - aiogram.event - INFO - Update id=468524449 is handled. Duration 214 ms by bot id=7867924002
+2026-03-30 13:31:23,253 - aiogram.event - INFO - Update id=468524450 is handled. Duration 390 ms by bot id=7867924002
+2026-03-30 13:31:26,096 - __main__ - INFO - Fragment клиент успешно инициализирован
+2026-03-30 13:31:26,096 - __main__ - INFO - Ошибка получения адреса: 'FragmentClient' object has no attribute 'get_address'
+2026-03-30 13:31:26,096 - __main__ - INFO - Адрес кошелька: Не удалось получить адрес
+2026-03-30 13:31:26,308 - aiogram.event - INFO - Update id=468524451 is handled. Duration 410 ms by bot id=7867924002
+2026-03-30 13:31:31,501 - __main__ - INFO - Fragment клиент успешно инициализирован
+2026-03-30 13:31:31,501 - __main__ - INFO - Ошибка получения адреса: 'FragmentClient' object has no attribute 'get_address'
+2026-03-30 13:31:31,501 - __main__ - INFO - Адрес кошелька: Не удалось получить адрес
+2026-03-30 13:31:31,896 - aiogram.event - INFO - Update id=468524452 is handled. Duration 396 ms by bot id=7867924002
+2026-03-30 13:37:23,952 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 13:37:23,954 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-03-30 13:37:23,954 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 7867924002)
+2026-03-30 13:37:24,212 - aiogram.dispatcher - INFO - Polling stopped for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 13:37:39,176 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 13:38:00,487 - aiogram.dispatcher - INFO - Run polling for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 13:38:09,009 - aiogram.event - INFO - Update id=468524453 is handled. Duration 408 ms by bot id=7867924002
+2026-03-30 13:38:12,627 - aiogram.event - INFO - Update id=468524454 is handled. Duration 414 ms by bot id=7867924002
+2026-03-30 13:38:15,638 - aiogram.event - INFO - Update id=468524455 is handled. Duration 408 ms by bot id=7867924002
+2026-03-30 13:38:19,770 - aiogram.event - INFO - Update id=468524456 is handled. Duration 408 ms by bot id=7867924002
+2026-03-30 13:38:22,018 - aiogram.event - INFO - Update id=468524457 is handled. Duration 206 ms by bot id=7867924002
+2026-03-30 13:38:23,670 - aiogram.event - INFO - Update id=468524458 is handled. Duration 416 ms by bot id=7867924002
+2026-03-30 13:38:25,374 - __main__ - INFO - Fragment клиент успешно инициализирован
+2026-03-30 13:38:25,374 - __main__ - INFO - Покупка Stars: 100 для @imsden
+2026-03-30 13:38:26,749 - httpx - INFO - HTTP Request: GET https://fragment.com/stars/buy "HTTP/1.1 200 OK"
+2026-03-30 13:38:45,126 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 13:38:45,226 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 13:38:45,330 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 13:38:46,354 - aiogram.event - INFO - Update id=468524459 is handled. Duration 21373 ms by bot id=7867924002
+2026-03-30 13:40:46,620 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ClientOSError: [WinError 1236] Подключение к сети было разорвано локальной системой
+2026-03-30 13:40:46,620 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 7867924002)
+2026-03-30 13:40:50,037 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 13:40:50,297 - aiogram.dispatcher - INFO - Polling stopped for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 14:15:52,053 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 14:15:59,494 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 14:16:02,867 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 14:16:03,236 - aiogram.dispatcher - INFO - Run polling for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 14:16:12,819 - aiogram.event - INFO - Update id=468524461 is handled. Duration 621 ms by bot id=7867924002
+2026-03-30 14:16:17,132 - aiogram.event - INFO - Update id=468524462 is handled. Duration 443 ms by bot id=7867924002
+2026-03-30 14:16:20,932 - aiogram.event - INFO - Update id=468524463 is handled. Duration 320 ms by bot id=7867924002
+2026-03-30 14:16:24,781 - aiogram.event - INFO - Update id=468524464 is handled. Duration 424 ms by bot id=7867924002
+2026-03-30 14:16:27,861 - aiogram.event - INFO - Update id=468524465 is handled. Duration 241 ms by bot id=7867924002
+2026-03-30 14:16:31,663 - __main__ - INFO - ✅ Fragment клиент успешно инициализирован
+2026-03-30 14:16:31,663 - __main__ - INFO - ⭐ Покупка Stars: 50 для @imsden
+2026-03-30 14:16:33,048 - httpx - INFO - HTTP Request: GET https://fragment.com/stars/buy "HTTP/1.1 200 OK"
+2026-03-30 14:16:34,526 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 14:16:34,638 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 14:16:34,763 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 14:16:35,582 - __main__ - ERROR - Критическая ошибка: unsupported format string passed to NoneType.__format__
+2026-03-30 14:16:35,854 - aiogram.event - INFO - Update id=468524466 is handled. Duration 4603 ms by bot id=7867924002
+2026-03-30 14:17:45,795 - aiogram.event - INFO - Update id=468524467 is handled. Duration 416 ms by bot id=7867924002
+2026-03-30 14:17:48,629 - aiogram.event - INFO - Update id=468524468 is handled. Duration 425 ms by bot id=7867924002
+2026-03-30 14:17:53,904 - aiogram.event - INFO - Update id=468524469 is handled. Duration 446 ms by bot id=7867924002
+2026-03-30 14:17:56,046 - aiogram.event - INFO - Update id=468524470 is handled. Duration 425 ms by bot id=7867924002
+2026-03-30 14:18:02,803 - aiogram.event - INFO - Update id=468524471 is handled. Duration 477 ms by bot id=7867924002
+2026-03-30 14:23:05,337 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 14:23:05,339 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ServerDisconnectedError: Server disconnected
+2026-03-30 14:23:05,339 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 7867924002)
+2026-03-30 14:23:05,596 - aiogram.dispatcher - INFO - Polling stopped for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 14:23:08,348 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 14:23:08,637 - aiogram.dispatcher - INFO - Run polling for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 14:23:16,214 - aiogram.event - INFO - Update id=468524473 is handled. Duration 620 ms by bot id=7867924002
+2026-03-30 14:23:18,042 - aiogram.event - INFO - Update id=468524474 is handled. Duration 408 ms by bot id=7867924002
+2026-03-30 14:23:19,787 - aiogram.event - INFO - Update id=468524475 is handled. Duration 247 ms by bot id=7867924002
+2026-03-30 14:23:23,135 - aiogram.event - INFO - Update id=468524476 is handled. Duration 406 ms by bot id=7867924002
+2026-03-30 14:23:24,440 - aiogram.event - INFO - Update id=468524477 is handled. Duration 235 ms by bot id=7867924002
+2026-03-30 14:23:26,669 - __main__ - INFO - ✅ Fragment клиент успешно инициализирован
+2026-03-30 14:23:26,669 - __main__ - INFO - ⭐ Покупка Stars: 50 для @imsden
+2026-03-30 14:23:31,066 - httpx - INFO - HTTP Request: GET https://fragment.com/stars/buy "HTTP/1.1 200 OK"
+2026-03-30 14:23:33,504 - aiogram.event - INFO - Update id=468524472 is not handled. Duration 21116 ms by bot id=7867924002
+2026-03-30 14:23:33,504 - aiogram.event - ERROR - Cause exception while process update id=468524472 by bot id=7867924002
+TelegramNetworkError: HTTP Client says - ClientConnectorError: Cannot connect to host api.telegram.org:443 ssl:default [Превышен таймаут семафора]
+Traceback (most recent call last):
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\connector.py", line 1310, in _wrap_create_connection
+    sock = await aiohappyeyeballs.start_connection(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohappyeyeballs\impl.py", line 122, in start_connection
+    raise first_exception
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohappyeyeballs\impl.py", line 73, in start_connection
+    sock = await _connect_sock(
+           ^^^^^^^^^^^^^^^^^^^^
+    ...<6 lines>...
+    )
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohappyeyeballs\impl.py", line 208, in _connect_sock
+    await loop.sock_connect(sock, address)
+  File "C:\Users\User\AppData\Local\Programs\Python\Python313\Lib\asyncio\proactor_events.py", line 726, in sock_connect
+    return await self._proactor.connect(sock, address)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Local\Programs\Python\Python313\Lib\asyncio\windows_events.py", line 804, in _poll
+    value = callback(transferred, key, ov)
+  File "C:\Users\User\AppData\Local\Programs\Python\Python313\Lib\asyncio\windows_events.py", line 600, in finish_connect
+    ov.getresult()
+    ~~~~~~~~~~~~^^
+OSError: [WinError 121] Превышен таймаут семафора
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\client\session\aiohttp.py", line 167, in make_request
+    async with session.post(
+               ~~~~~~~~~~~~^
+        url,
+        ^^^^
+        data=form,
+        ^^^^^^^^^^
+        timeout=self.timeout if timeout is None else timeout,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ) as resp:
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\client.py", line 1521, in __aenter__
+    self._resp: _RetType = await self._coro
+                           ^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\client.py", line 788, in _request
+    resp = await handler(req)
+           ^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\client.py", line 742, in _connect_and_send_request
+    conn = await self._connector.connect(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        req, traces=traces, timeout=real_timeout
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\connector.py", line 672, in connect
+    proto = await self._create_connection(req, traces, timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\connector.py", line 1251, in _create_connection
+    _, proto = await self._create_direct_connection(req, traces, timeout)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\connector.py", line 1623, in _create_direct_connection
+    raise last_exc
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\connector.py", line 1592, in _create_direct_connection
+    transp, proto = await self._wrap_create_connection(
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiohttp\connector.py", line 1333, in _wrap_create_connection
+    raise client_error(req.connection_key, exc) from exc
+aiohttp.client_exceptions.ClientConnectorError: Cannot connect to host api.telegram.org:443 ssl:default [Превышен таймаут семафора]
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 320, in _process_update
+    response = await self.feed_update(bot, update, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 164, in feed_update
+    response = await self.update.wrap_outer_middleware(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<7 lines>...
+    )
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\error.py", line 27, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\middlewares\user_context.py", line 58, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\fsm\middleware.py", line 43, in __call__
+    return await handler(event, data)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 126, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 71, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\dispatcher.py", line 283, in _listen_update
+    return await self.propagate_event(update_type=update_type, event=event, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 161, in propagate_event
+    return await observer.wrap_outer_middleware(_wrapped, event=event, data=kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 153, in _wrapped
+    return await self._propagate_event(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+    )
+    ^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\router.py", line 181, in _propagate_event
+    response = await observer.trigger(event, **kwargs)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\event\telegram.py", line 126, in trigger
+    return await wrapped_inner(event, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\dispatcher\event\handler.py", line 71, in call
+    return await wrapped()
+           ^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\main.py", line 825, in cmd_start
+    await message.answer(
+    ...<7 lines>...
+    )
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\methods\base.py", line 82, in emit
+    return await bot(self)
+           ^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\client\bot.py", line 488, in __call__
+    return await self.session(self, method, timeout=request_timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\client\session\base.py", line 259, in __call__
+    return cast(TelegramType, await middleware(bot, method))
+                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "D:\боты\боты пайчарм\тг звезды бот\.venv\Lib\site-packages\aiogram\client\session\aiohttp.py", line 176, in make_request
+    raise TelegramNetworkError(method=method, message=f"{type(e).__name__}: {e}") from e
+aiogram.exceptions.TelegramNetworkError: HTTP Client says - ClientConnectorError: Cannot connect to host api.telegram.org:443 ssl:default [Превышен таймаут семафора]
+2026-03-30 14:23:55,689 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 14:23:55,768 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 14:23:55,865 - httpx - INFO - HTTP Request: POST https://fragment.com/api?hash=ddbc4c240c1e34d53f "HTTP/1.1 200 OK"
+2026-03-30 14:23:57,946 - aiogram.dispatcher - ERROR - Failed to fetch updates - TelegramNetworkError: HTTP Client says - ClientOSError: [WinError 121] Превышен таймаут семафора
+2026-03-30 14:23:57,947 - aiogram.dispatcher - WARNING - Sleep for 1.000000 seconds and try again... (tryings = 0, bot id = 7867924002)
+2026-03-30 14:24:07,658 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 14:24:07,915 - aiogram.event - INFO - Update id=468524478 is not handled. Duration 41661 ms by bot id=7867924002
+2026-03-30 14:24:07,916 - aiogram.dispatcher - INFO - Polling stopped for bot @teststarewgsbot id=7867924002 - 'Тест звезды'
+2026-03-30 14:24:10,219 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 14:24:20,100 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 14:24:26,153 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 14:25:09,573 - aiogram.dispatcher - INFO - Polling stopped
+2026-03-30 14:25:12,663 - aiogram.dispatcher - INFO - Start polling
+2026-03-30 14:25:19,214 - aiogram.dispatcher - INFO - Polling stopped

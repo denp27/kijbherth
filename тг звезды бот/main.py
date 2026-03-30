@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Telegram бот для покупки Telegram Stars и Premium через Fragment.com
-Исправленная версия с обработкой None значений
+Исправленная версия - убраны backslash из f-строк
 """
 
 import asyncio
@@ -68,14 +68,12 @@ EMOJI = {
     "chart": "📈",
 }
 
-
 # ========== ГЕНЕРАТОР ID ЗАКАЗА ==========
 def generate_order_id() -> str:
     """Генерация уникального ID заказа"""
     date_part = datetime.now().strftime("%Y%m%d")
     random_part = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ0123456789', k=6))
     return f"FRG-{date_part}-{random_part}"
-
 
 # ========== БЕЗОПАСНОЕ ФОРМАТИРОВАНИЕ ==========
 def safe_format(value: Any, format_spec: str = ".4f") -> str:
@@ -89,13 +87,11 @@ def safe_format(value: Any, format_spec: str = ".4f") -> str:
     except (ValueError, TypeError):
         return str(value) if value else "0.0000"
 
-
 def safe_str(value: Any) -> str:
     """Безопасное преобразование в строку"""
     if value is None:
         return ""
     return str(value)
-
 
 # ========== НАСТРОЙКА ==========
 # Получите токен у @BotFather
@@ -121,6 +117,7 @@ CRYPTOBOT_TOKEN = ""
 LOLZTEAM_TOKEN = ""
 CRYSTALPAY_TOKEN = ""
 
+# ID администраторов
 
 
 # Режимы работы
@@ -161,22 +158,21 @@ bot = Bot(
 )
 dp = Dispatcher()
 
-
 # ========== БАЗА ДАННЫХ ==========
 class Database:
     """Класс для работы с SQLite базой данных"""
-
+    
     def __init__(self, db_path: str = "database.db"):
         self.db_path = db_path
         self.init_db()
-
+    
     def get_connection(self):
         return sqlite3.connect(self.db_path)
-
+    
     def init_db(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-
+            
             # Таблица пользователей
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS users (
@@ -195,7 +191,7 @@ class Database:
                     last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-
+            
             # Таблица покупок
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS purchases (
@@ -215,7 +211,7 @@ class Database:
                     FOREIGN KEY (user_id) REFERENCES users(user_id)
                 )
             """)
-
+            
             # Таблица промокодов
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS promocodes (
@@ -230,7 +226,7 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-
+            
             # Таблица платежных заявок
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS payments (
@@ -246,7 +242,7 @@ class Database:
                     FOREIGN KEY (user_id) REFERENCES users(user_id)
                 )
             """)
-
+            
             # Таблица настроек
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS settings (
@@ -255,7 +251,7 @@ class Database:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-
+            
             # Таблица рассылок
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS broadcasts (
@@ -267,7 +263,7 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-
+            
             # Таблица логов
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS logs (
@@ -278,16 +274,16 @@ class Database:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
-
+            
             # Добавляем админа
             for admin_id in ADMIN_IDS:
                 cursor.execute("""
                     INSERT OR IGNORE INTO users (user_id, is_admin) 
                     VALUES (?, 1)
                 """, (admin_id,))
-
+            
             conn.commit()
-
+    
     # ========== USER METHODS ==========
     def get_user(self, user_id: int) -> Optional[Dict]:
         with self.get_connection() as conn:
@@ -298,8 +294,8 @@ class Database:
                 columns = [desc[0] for desc in cursor.description]
                 return dict(zip(columns, row))
             return None
-
-    def create_user(self, user_id: int, username: str = None, first_name: str = None,
+    
+    def create_user(self, user_id: int, username: str = None, first_name: str = None, 
                     last_name: str = None, referrer_id: int = None):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -308,7 +304,7 @@ class Database:
                 VALUES (?, ?, ?, ?, ?)
             """, (user_id, username, first_name, last_name, referrer_id))
             conn.commit()
-
+    
     def update_balance(self, user_id: int, amount: float):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -318,7 +314,7 @@ class Database:
                 WHERE user_id = ?
             """, (amount, amount, user_id))
             conn.commit()
-
+    
     def update_user_stats(self, user_id: int, stars: int = 0, premium_months: int = 0):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -328,7 +324,7 @@ class Database:
                 WHERE user_id = ?
             """, (stars, premium_months, user_id))
             conn.commit()
-
+    
     def update_last_active(self, user_id: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -336,15 +332,15 @@ class Database:
                 UPDATE users SET last_active = CURRENT_TIMESTAMP WHERE user_id = ?
             """, (user_id,))
             conn.commit()
-
+    
     def block_user(self, user_id: int, block: bool = True):
         with self.get_connection() as conn:
             cursor = conn.cursor()
             cursor.execute("UPDATE users SET is_blocked = ? WHERE user_id = ?", (1 if block else 0, user_id))
             conn.commit()
-
+    
     # ========== PURCHASE METHODS ==========
-    def add_purchase(self, user_id: int, p_type: str, amount: int, recipient: str,
+    def add_purchase(self, user_id: int, p_type: str, amount: int, recipient: str, 
                      price: float, transaction_id: str, status: str = "completed") -> Dict:
         """Добавляет покупку и возвращает order_id"""
         order_id = generate_order_id()
@@ -357,7 +353,7 @@ class Database:
                   datetime.now().isoformat() if status == "completed" else None))
             conn.commit()
             return {"order_id": order_id, "id": cursor.lastrowid}
-
+    
     def get_purchase_by_order_id(self, order_id: str) -> Optional[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -367,7 +363,7 @@ class Database:
                 columns = [desc[0] for desc in cursor.description]
                 return dict(zip(columns, row))
             return None
-
+    
     def get_user_purchases(self, user_id: int, limit: int = 10) -> List[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -380,7 +376,7 @@ class Database:
             rows = cursor.fetchall()
             columns = [desc[0] for desc in cursor.description]
             return [dict(zip(columns, row)) for row in rows]
-
+    
     def update_purchase_status(self, purchase_id: int, status: str, error: str = None):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -390,12 +386,12 @@ class Database:
                 WHERE id = ?
             """, (status, error, datetime.now().isoformat() if status == "completed" else None, purchase_id))
             conn.commit()
-
+    
     # ========== PROMOCODE METHODS ==========
     def generate_promocode(self, length: int = 8) -> str:
         return secrets.token_hex(length // 2).upper()
-
-    def create_promocode(self, code: str, discount_type: str, discount_value: float,
+    
+    def create_promocode(self, code: str, discount_type: str, discount_value: float, 
                          max_uses: int, expires_days: int, created_by: int) -> bool:
         expires_at = (datetime.now() + timedelta(days=expires_days)).isoformat()
         with self.get_connection() as conn:
@@ -409,7 +405,7 @@ class Database:
                 return True
             except sqlite3.IntegrityError:
                 return False
-
+    
     def get_promocode(self, code: str) -> Optional[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -419,7 +415,7 @@ class Database:
                 columns = [desc[0] for desc in cursor.description]
                 return dict(zip(columns, row))
             return None
-
+    
     def use_promocode(self, code: str) -> bool:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -430,33 +426,33 @@ class Database:
             """, (code.upper(),))
             conn.commit()
             return cursor.rowcount > 0
-
+    
     def validate_promocode(self, code: str) -> Dict:
         promo = self.get_promocode(code)
         if not promo:
             return {"valid": False, "error": f"{EMOJI['error']} Промокод не найден"}
-
+        
         if promo["used_count"] >= promo["max_uses"]:
             return {"valid": False, "error": f"{EMOJI['error']} Промокод уже использован"}
-
+        
         if promo["expires_at"] and datetime.fromisoformat(promo["expires_at"]) < datetime.now():
             return {"valid": False, "error": f"{EMOJI['warning']} Срок действия промокода истек"}
-
+        
         return {
             "valid": True,
             "discount_type": promo["discount_type"],
             "discount_value": promo["discount_value"]
         }
-
+    
     def apply_discount(self, price: float, discount_type: str, discount_value: float) -> float:
         if discount_type == "percent":
             return price * (1 - discount_value / 100)
         elif discount_type == "fixed":
             return max(0, price - discount_value)
         return price
-
+    
     # ========== PAYMENT METHODS ==========
-    def add_payment(self, user_id: int, amount: float, currency: str,
+    def add_payment(self, user_id: int, amount: float, currency: str, 
                     payment_system: str, payment_id: str) -> int:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -466,7 +462,7 @@ class Database:
             """, (user_id, amount, currency, payment_system, payment_id))
             conn.commit()
             return cursor.lastrowid
-
+    
     def complete_payment(self, payment_id: str, status: str = "completed"):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -476,36 +472,36 @@ class Database:
                 WHERE payment_id = ?
             """, (status, payment_id))
             conn.commit()
-
+    
     # ========== STATISTICS METHODS ==========
     def get_stats(self) -> Dict:
         with self.get_connection() as conn:
             cursor = conn.cursor()
-
+            
             cursor.execute("SELECT COUNT(*) FROM users")
             total_users = cursor.fetchone()[0]
-
+            
             cursor.execute("SELECT COUNT(*) FROM users WHERE is_blocked = 1")
             blocked_users = cursor.fetchone()[0]
-
+            
             cursor.execute("SELECT COUNT(*) FROM purchases WHERE status = 'completed'")
             total_purchases = cursor.fetchone()[0]
-
+            
             cursor.execute("SELECT SUM(price) FROM purchases WHERE status = 'completed'")
             total_volume = cursor.fetchone()[0] or 0
-
+            
             cursor.execute("SELECT SUM(total_stars) FROM users")
             total_stars_sold = cursor.fetchone()[0] or 0
-
+            
             cursor.execute("SELECT SUM(total_premium_months) FROM users")
             total_premium_sold = cursor.fetchone()[0] or 0
-
+            
             cursor.execute("""
                 SELECT COUNT(*) FROM users 
                 WHERE last_active > datetime('now', '-7 days')
             """)
             active_users = cursor.fetchone()[0]
-
+            
             return {
                 "total_users": total_users,
                 "blocked_users": blocked_users,
@@ -515,7 +511,7 @@ class Database:
                 "total_stars_sold": total_stars_sold,
                 "total_premium_sold": total_premium_sold
             }
-
+    
     def get_daily_stats(self, days: int = 7) -> List[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -531,7 +527,7 @@ class Database:
             """, (f'-{days} days',))
             rows = cursor.fetchall()
             return [{"date": row[0], "purchases": row[1], "volume": row[2] or 0} for row in rows]
-
+    
     # ========== BROADCAST METHODS ==========
     def add_broadcast(self, message: str, created_by: int) -> int:
         with self.get_connection() as conn:
@@ -542,7 +538,7 @@ class Database:
             """, (message, created_by))
             conn.commit()
             return cursor.lastrowid
-
+    
     def update_broadcast_stats(self, broadcast_id: int, sent: int):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -552,7 +548,7 @@ class Database:
                 WHERE id = ?
             """, (sent, broadcast_id))
             conn.commit()
-
+    
     # ========== SETTINGS METHODS ==========
     def get_setting(self, key: str, default: str = None) -> str:
         with self.get_connection() as conn:
@@ -560,7 +556,7 @@ class Database:
             cursor.execute("SELECT value FROM settings WHERE key = ?", (key,))
             row = cursor.fetchone()
             return row[0] if row else default
-
+    
     def set_setting(self, key: str, value: str):
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -569,7 +565,7 @@ class Database:
                 VALUES (?, ?, CURRENT_TIMESTAMP)
             """, (key, value))
             conn.commit()
-
+    
     # ========== LOG METHODS ==========
     def add_log(self, level: str, module: str, message: str):
         with self.get_connection() as conn:
@@ -579,7 +575,7 @@ class Database:
                 VALUES (?, ?, ?)
             """, (level, module, message[:500]))
             conn.commit()
-
+    
     def get_logs(self, limit: int = 100) -> List[Dict]:
         with self.get_connection() as conn:
             cursor = conn.cursor()
@@ -597,10 +593,10 @@ db = Database()
 # ========== FRAGMENT СЕРВИС ==========
 class FragmentService:
     """Сервис для работы с Fragment API"""
-
+    
     def __init__(self):
         self.client = None
-
+    
     async def __aenter__(self):
         try:
             from pyfragment import FragmentClient
@@ -618,14 +614,14 @@ class FragmentService:
         except Exception as e:
             logger.error(f"{EMOJI['error']} Ошибка инициализации: {e}")
             raise
-
+    
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if self.client:
             try:
                 await self.client.__aexit__(exc_type, exc_val, exc_tb)
             except Exception as e:
                 logger.error(f"Ошибка закрытия: {e}")
-
+    
     async def buy_stars(self, username: str, amount: int) -> Dict[str, Any]:
         if TEST_MODE:
             logger.info(f"{EMOJI['stars']} [TEST] Покупка Stars: {amount} для {username}")
@@ -635,31 +631,31 @@ class FragmentService:
                 "username": username.replace("@", ""),
                 "transaction_id": f"test_{int(datetime.now().timestamp())}"
             }
-
+        
         try:
             if username.startswith("@"):
                 username = username[1:]
-
+            
             logger.info(f"{EMOJI['stars']} Покупка Stars: {amount} для @{username}")
-
+            
             result = await self.client.purchase_stars(
                 username=f"@{username}",
                 amount=amount,
                 show_sender=False
             )
-
+            
             return {
                 "success": True,
                 "stars": amount,
                 "username": username,
                 "transaction_id": getattr(result, 'transaction_id', 'unknown')
             }
-
+            
         except Exception as e:
             error_msg = str(e)
             logger.error(f"{EMOJI['error']} Ошибка покупки Stars: {error_msg}")
             db.add_log("ERROR", "fragment", f"buy_stars: {error_msg[:200]}")
-
+            
             if "Insufficient" in error_msg:
                 return {"success": False, "error": f"{EMOJI['money']} Недостаточно средств на TON кошельке"}
             elif "User not found" in error_msg:
@@ -668,7 +664,7 @@ class FragmentService:
                 return {"success": False, "error": f"{EMOJI['warning']} Ошибка авторизации. Обновите cookies Fragment"}
             else:
                 return {"success": False, "error": f"{EMOJI['error']} Ошибка: {error_msg[:150]}"}
-
+    
     async def buy_premium(self, username: str, months: int) -> Dict[str, Any]:
         if TEST_MODE:
             logger.info(f"{EMOJI['premium']} [TEST] Покупка Premium: {months} мес. для {username}")
@@ -678,31 +674,31 @@ class FragmentService:
                 "username": username.replace("@", ""),
                 "transaction_id": f"test_{int(datetime.now().timestamp())}"
             }
-
+        
         try:
             if username.startswith("@"):
                 username = username[1:]
-
+            
             logger.info(f"{EMOJI['premium']} Покупка Premium: {months} мес. для @{username}")
-
+            
             result = await self.client.purchase_premium(
                 username=f"@{username}",
                 months=months,
                 show_sender=False
             )
-
+            
             return {
                 "success": True,
                 "months": months,
                 "username": username,
                 "transaction_id": getattr(result, 'transaction_id', 'unknown')
             }
-
+            
         except Exception as e:
             error_msg = str(e)
             logger.error(f"{EMOJI['error']} Ошибка покупки Premium: {error_msg}")
             db.add_log("ERROR", "fragment", f"buy_premium: {error_msg[:200]}")
-
+            
             if "Insufficient" in error_msg:
                 return {"success": False, "error": f"{EMOJI['money']} Недостаточно средств на TON кошельке"}
             elif "User not found" in error_msg:
@@ -730,24 +726,22 @@ def get_main_keyboard() -> InlineKeyboardMarkup:
         ],
     ])
 
-
 def get_stars_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
         [
-            InlineKeyboardButton(text=f"100 {EMOJI['stars']} (0.15 TON)", callback_data="stars_100"),
-            InlineKeyboardButton(text=f"500 {EMOJI['stars']} (0.75 TON)", callback_data="stars_500"),
+            InlineKeyboardButton(text="100 " + EMOJI['stars'] + " (0.15 TON)", callback_data="stars_100"),
+            InlineKeyboardButton(text="500 " + EMOJI['stars'] + " (0.75 TON)", callback_data="stars_500"),
         ],
         [
-            InlineKeyboardButton(text=f"1000 {EMOJI['stars']} (1.5 TON)", callback_data="stars_1000"),
-            InlineKeyboardButton(text=f"5000 {EMOJI['stars']} (7.5 TON)", callback_data="stars_5000"),
+            InlineKeyboardButton(text="1000 " + EMOJI['stars'] + " (1.5 TON)", callback_data="stars_1000"),
+            InlineKeyboardButton(text="5000 " + EMOJI['stars'] + " (7.5 TON)", callback_data="stars_5000"),
         ],
         [
-            InlineKeyboardButton(text=f"10000 {EMOJI['stars']} (15 TON)", callback_data="stars_10000"),
-            InlineKeyboardButton(text=f"{EMOJI['sparkles']} Свое число", callback_data="stars_custom"),
+            InlineKeyboardButton(text="10000 " + EMOJI['stars'] + " (15 TON)", callback_data="stars_10000"),
+            InlineKeyboardButton(text=EMOJI['sparkles'] + " Свое число", callback_data="stars_custom"),
         ],
-        [InlineKeyboardButton(text=f"{EMOJI['back']} Назад", callback_data="back_to_main")],
+        [InlineKeyboardButton(text=EMOJI['back'] + " Назад", callback_data="back_to_main")],
     ])
-
 
 def get_premium_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
@@ -758,26 +752,23 @@ def get_premium_keyboard() -> InlineKeyboardMarkup:
         [
             InlineKeyboardButton(text=f"12 {EMOJI['crown']} ({PREMIUM_PRICES[12]} TON)", callback_data="premium_12"),
         ],
-        [InlineKeyboardButton(text=f"{EMOJI['back']} Назад", callback_data="back_to_main")],
+        [InlineKeyboardButton(text=EMOJI['back'] + " Назад", callback_data="back_to_main")],
     ])
-
 
 def get_confirm_keyboard(item_type: str, promocode_applied: bool = False) -> InlineKeyboardMarkup:
     buttons = [
         [
-            InlineKeyboardButton(text=f"{EMOJI['confirm']} Подтвердить", callback_data=f"confirm_{item_type}"),
-            InlineKeyboardButton(text=f"{EMOJI['cancel']} Отмена", callback_data="cancel_purchase"),
+            InlineKeyboardButton(text=EMOJI['confirm'] + " Подтвердить", callback_data=f"confirm_{item_type}"),
+            InlineKeyboardButton(text=EMOJI['cancel'] + " Отмена", callback_data="cancel_purchase"),
         ],
     ]
     if not promocode_applied:
-        buttons.insert(0, [InlineKeyboardButton(text=f"{EMOJI['promocode']} Применить промокод",
-                                                callback_data="apply_promocode")])
+        buttons.insert(0, [InlineKeyboardButton(text=EMOJI['promocode'] + " Применить промокод", callback_data="apply_promocode")])
     return InlineKeyboardMarkup(inline_keyboard=buttons)
-
 
 def get_back_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text=f"{EMOJI['back']} Назад", callback_data="back_to_main")]
+        [InlineKeyboardButton(text=EMOJI['back'] + " Назад", callback_data="back_to_main")]
     ])
 
 
@@ -795,12 +786,12 @@ class PurchaseState(StatesGroup):
 @dp.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext):
     await state.clear()
-
+    
     args = message.text.split()
     referrer_id = None
     if len(args) > 1 and args[1].isdigit():
         referrer_id = int(args[1])
-
+    
     user = db.get_user(message.from_user.id)
     if not user:
         db.create_user(
@@ -810,9 +801,9 @@ async def cmd_start(message: Message, state: FSMContext):
             message.from_user.last_name,
             referrer_id if referrer_id != message.from_user.id else None
         )
-
+    
     db.update_last_active(message.from_user.id)
-
+    
     maintenance = db.get_setting("maintenance_mode", "False") == "True"
     if maintenance and message.from_user.id not in ADMIN_IDS:
         await message.answer(
@@ -821,17 +812,20 @@ async def cmd_start(message: Message, state: FSMContext):
             reply_markup=get_back_keyboard()
         )
         return
-
+    
+    test_mode_text = ""
+    if TEST_MODE:
+        test_mode_text = "🧪 <b>ТЕСТОВЫЙ РЕЖИМ ВКЛЮЧЕН</b>\n\n"
+    
     await message.answer(
         f"{EMOJI['rocket']} <b>Добро пожаловать в Fragment Bot!</b> {EMOJI['rocket']}\n\n"
         "Я помогу вам купить Telegram Stars и Premium через Fragment.com\n\n"
         f"{EMOJI['stars']} <b>Stars</b> — внутренняя валюта Telegram\n"
         f"{EMOJI['premium']} <b>Premium</b> — расширенные возможности\n\n"
-        f"{'🧪 <b>ТЕСТОВЫЙ РЕЖИМ ВКЛЮЧЕН</b>\n\n' if TEST_MODE else ''}"
+        f"{test_mode_text}"
         "Выберите действие:",
         reply_markup=get_main_keyboard()
     )
-
 
 @dp.message(Command("help"))
 async def cmd_help(message: Message):
@@ -841,43 +835,41 @@ async def cmd_help(message: Message):
         f"{EMOJI['stars']} Telegram Stars — 100-10000 шт.\n"
         f"{EMOJI['premium']} Telegram Premium — 3/6/12 месяцев\n\n"
         f"<b>{EMOJI['cart']} Как купить:</b>\n"
-        f"1️⃣ Нажмите «Купить Stars» или «Купить Premium»\n"
-        f"2️⃣ Введите username получателя\n"
-        f"3️⃣ Выберите количество\n"
-        f"4️⃣ При желании примените промокод\n"
-        f"5️⃣ Подтвердите покупку\n\n"
+        "1️⃣ Нажмите «Купить Stars» или «Купить Premium»\n"
+        "2️⃣ Введите username получателя\n"
+        "3️⃣ Выберите количество\n"
+        "4️⃣ При желании примените промокод\n"
+        "5️⃣ Подтвердите покупку\n\n"
         f"<b>{EMOJI['money']} Цены:</b>\n"
-        f"Stars: 100⭐ = 0.15 TON, 1000⭐ = 1.5 TON\n"
-        f"Premium: 3 мес = 4.5 TON, 12 мес = 18 TON\n\n"
+        "Stars: 100⭐ = 0.15 TON, 1000⭐ = 1.5 TON\n"
+        "Premium: 3 мес = 4.5 TON, 12 мес = 18 TON\n\n"
         f"<b>{EMOJI['promocode']} Промокоды:</b>\n"
-        f"Введите /promocode или нажмите кнопку\n\n"
+        "Введите /promocode или нажмите кнопку\n\n"
         f"<b>{EMOJI['history']} История:</b>\n"
-        f"Нажмите «История» для просмотра покупок с ID заказов\n\n"
-        f"📞 По вопросам: @fragment_support",
+        "Нажмите «История» для просмотра покупок с ID заказов\n\n"
+        "📞 По вопросам: @fragment_support",
         reply_markup=get_back_keyboard()
     )
-
 
 @dp.message(Command("balance"))
 async def cmd_balance(message: Message):
     user = db.get_user(message.from_user.id)
     balance = user.get("balance", 0) if user else 0
-
+    
     await message.answer(
         f"{EMOJI['money']} <b>Ваш баланс</b>\n\n"
         f"<code>{safe_format(balance)} TON</code>\n\n"
-        f"<b>Как пополнить:</b>\n"
-        f"• Нажмите «Пополнить»\n"
-        f"• Выберите платежную систему\n"
-        f"• Оплатите счет\n"
-        f"• Баланс пополнится автоматически\n\n"
-        f"<b>Комиссия сети:</b> ≈0.05 TON",
+        "<b>Как пополнить:</b>\n"
+        "• Нажмите «Пополнить»\n"
+        "• Выберите платежную систему\n"
+        "• Оплатите счет\n"
+        "• Баланс пополнится автоматически\n\n"
+        "<b>Комиссия сети:</b> ≈0.05 TON",
         reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=f"{EMOJI['money']} Пополнить", callback_data="deposit")],
             [InlineKeyboardButton(text=f"{EMOJI['back']} Назад", callback_data="back_to_main")]
         ])
     )
-
 
 @dp.message(Command("promocode"))
 async def cmd_promocode(message: Message, state: FSMContext):
@@ -889,7 +881,6 @@ async def cmd_promocode(message: Message, state: FSMContext):
         reply_markup=get_back_keyboard()
     )
 
-
 @dp.callback_query(F.data == "back_to_main")
 async def callback_back_to_main(callback: CallbackQuery, state: FSMContext):
     await state.clear()
@@ -899,25 +890,22 @@ async def callback_back_to_main(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_main_keyboard()
     )
 
-
 @dp.callback_query(F.data == "help")
 async def callback_help(callback: CallbackQuery):
     await callback.answer()
     await cmd_help(callback.message)
-
 
 @dp.callback_query(F.data == "balance")
 async def callback_balance(callback: CallbackQuery):
     await callback.answer()
     await cmd_balance(callback.message)
 
-
 @dp.callback_query(F.data == "history")
 async def callback_history(callback: CallbackQuery):
     await callback.answer()
-
+    
     purchases = db.get_user_purchases(callback.from_user.id, limit=10)
-
+    
     if not purchases:
         await callback.message.edit_text(
             f"{EMOJI['history']} <b>История покупок</b>\n\n"
@@ -925,7 +913,7 @@ async def callback_history(callback: CallbackQuery):
             reply_markup=get_back_keyboard()
         )
         return
-
+    
     text = f"{EMOJI['history']} <b>История покупок</b>\n\n"
     for p in purchases:
         emoji_item = EMOJI['stars'] if p["type"] == "stars" else EMOJI['premium']
@@ -935,16 +923,15 @@ async def callback_history(callback: CallbackQuery):
         order_id = safe_str(p.get("order_id", "N/A"))
         amount = p.get("amount", 0)
         recipient = safe_str(p.get("recipient", "unknown"))
-
+        
         text += f"{emoji_item} <b>Заказ #{order_id}</b>\n"
         text += f"   {p['type'].title()} | {amount} | @{recipient}\n"
         text += f"   {status_emoji} {price} TON | {date}\n\n"
-
+    
     await callback.message.edit_text(
         text,
         reply_markup=get_back_keyboard()
     )
-
 
 @dp.callback_query(F.data == "promocode")
 async def callback_promocode(callback: CallbackQuery, state: FSMContext):
@@ -956,7 +943,6 @@ async def callback_promocode(callback: CallbackQuery, state: FSMContext):
         "Для отмены нажмите «Назад»",
         reply_markup=get_back_keyboard()
     )
-
 
 @dp.callback_query(F.data == "buy_stars")
 async def callback_buy_stars(callback: CallbackQuery, state: FSMContext):
@@ -972,7 +958,6 @@ async def callback_buy_stars(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_back_keyboard()
     )
 
-
 @dp.callback_query(F.data == "buy_premium")
 async def callback_buy_premium(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
@@ -987,7 +972,6 @@ async def callback_buy_premium(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_back_keyboard()
     )
 
-
 @dp.callback_query(F.data == "stars_custom")
 async def callback_stars_custom(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
@@ -1000,12 +984,11 @@ async def callback_stars_custom(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_back_keyboard()
     )
 
-
 @dp.message(PurchaseState.waiting_for_username)
 async def process_username(message: Message, state: FSMContext):
     username_raw = message.text.strip()
     username = username_raw.replace("@", "")
-
+    
     if not re.match(r'^[a-zA-Z0-9_]{5,32}$', username):
         await message.answer(
             f"{EMOJI['error']} <b>Некорректный username</b>\n\n"
@@ -1018,12 +1001,12 @@ async def process_username(message: Message, state: FSMContext):
             reply_markup=get_back_keyboard()
         )
         return
-
+    
     data = await state.get_data()
     purchase_type = data.get("purchase_type")
-
+    
     await state.update_data(username=username)
-
+    
     if purchase_type == "stars":
         await state.set_state(PurchaseState.waiting_for_stars_amount)
         await message.answer(
@@ -1039,7 +1022,6 @@ async def process_username(message: Message, state: FSMContext):
             reply_markup=get_premium_keyboard()
         )
 
-
 @dp.message(PurchaseState.waiting_for_custom_stars)
 async def process_custom_stars(message: Message, state: FSMContext):
     try:
@@ -1053,17 +1035,17 @@ async def process_custom_stars(message: Message, state: FSMContext):
             reply_markup=get_back_keyboard()
         )
         return
-
+    
     data = await state.get_data()
     username = data.get("username")
-
+    
     await state.update_data(stars_amount=amount)
     await state.update_data(item_type="stars")
     await state.update_data(item_amount=amount)
     await state.set_state(PurchaseState.waiting_for_confirmation)
-
+    
     price = amount * STARS_PRICES["custom"]
-
+    
     await message.answer(
         f"{EMOJI['cart']} <b>Подтверждение покупки</b>\n\n"
         f"{EMOJI['stars']} <b>Товар:</b> Telegram Stars\n"
@@ -1074,13 +1056,12 @@ async def process_custom_stars(message: Message, state: FSMContext):
         reply_markup=get_confirm_keyboard("stars")
     )
 
-
 @dp.message(PurchaseState.waiting_for_promocode)
 async def process_promocode(message: Message, state: FSMContext):
     code = message.text.strip().upper()
-
+    
     validation = db.validate_promocode(code)
-
+    
     if not validation["valid"]:
         await message.answer(
             f"{validation['error']}\n\n"
@@ -1088,27 +1069,27 @@ async def process_promocode(message: Message, state: FSMContext):
             reply_markup=get_back_keyboard()
         )
         return
-
+    
     await state.update_data(promocode=code, discount=validation)
-
+    
     data = await state.get_data()
     item_type = data.get("item_type")
     item_amount = data.get("item_amount")
     username = data.get("username")
-
+    
     if item_type == "stars":
         price = item_amount * STARS_PRICES.get(item_amount, STARS_PRICES["custom"])
     else:
         price = PREMIUM_PRICES.get(item_amount, item_amount * 1.5)
-
+    
     discounted_price = db.apply_discount(price, validation["discount_type"], validation["discount_value"])
-
+    
     await state.update_data(price=discounted_price, original_price=price)
-
+    
     emoji_item = EMOJI['stars'] if item_type == "stars" else EMOJI['premium']
     discount_value = validation['discount_value']
     discount_symbol = '%' if validation['discount_type'] == 'percent' else ' TON'
-
+    
     await message.answer(
         f"{EMOJI['success']} <b>Промокод активирован!</b>\n\n"
         f"{EMOJI['promocode']} <b>Промокод:</b> {code}\n"
@@ -1122,22 +1103,21 @@ async def process_promocode(message: Message, state: FSMContext):
         f"{EMOJI['confirm']} Подтвердите покупку:",
         reply_markup=get_confirm_keyboard(item_type, promocode_applied=True)
     )
-
+    
     await state.set_state(PurchaseState.waiting_for_confirmation)
-
 
 @dp.callback_query(F.data.startswith("stars_"))
 async def process_stars_amount(callback: CallbackQuery, state: FSMContext):
     if callback.data == "stars_custom":
         await callback_stars_custom(callback, state)
         return
-
+    
     amount = int(callback.data.split("_")[1])
     data = await state.get_data()
     username = data.get("username")
-
+    
     price = STARS_PRICES.get(amount, amount * STARS_PRICES["custom"])
-
+    
     await state.update_data(
         stars_amount=amount,
         item_type="stars",
@@ -1145,7 +1125,7 @@ async def process_stars_amount(callback: CallbackQuery, state: FSMContext):
         price=price
     )
     await state.set_state(PurchaseState.waiting_for_confirmation)
-
+    
     await callback.answer()
     await callback.message.edit_text(
         f"{EMOJI['cart']} <b>Подтверждение покупки</b>\n\n"
@@ -1157,15 +1137,14 @@ async def process_stars_amount(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_confirm_keyboard("stars")
     )
 
-
 @dp.callback_query(F.data.startswith("premium_"))
 async def process_premium_months(callback: CallbackQuery, state: FSMContext):
     months = int(callback.data.split("_")[1])
     data = await state.get_data()
     username = data.get("username")
-
+    
     price = PREMIUM_PRICES.get(months, months * 1.5)
-
+    
     await state.update_data(
         premium_months=months,
         item_type="premium",
@@ -1173,7 +1152,7 @@ async def process_premium_months(callback: CallbackQuery, state: FSMContext):
         price=price
     )
     await state.set_state(PurchaseState.waiting_for_confirmation)
-
+    
     await callback.answer()
     await callback.message.edit_text(
         f"{EMOJI['cart']} <b>Подтверждение покупки</b>\n\n"
@@ -1185,18 +1164,17 @@ async def process_premium_months(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_confirm_keyboard("premium")
     )
 
-
 @dp.callback_query(F.data.startswith("confirm_"))
 async def process_confirm(callback: CallbackQuery, state: FSMContext):
     await callback.answer(f"{EMOJI['wait']} Обработка...")
-
+    
     data = await state.get_data()
     username = data.get("username")
     item_type = data.get("item_type")
     item_amount = data.get("item_amount")
     price = data.get("price")
     promocode = data.get("promocode")
-
+    
     if not item_type or not item_amount:
         await callback.message.edit_text(
             f"{EMOJI['error']} <b>Ошибка</b>\n\nСессия истекла. Начните заново.",
@@ -1204,33 +1182,32 @@ async def process_confirm(callback: CallbackQuery, state: FSMContext):
         )
         await state.clear()
         return
-
+    
     if promocode and not data.get("discount_applied"):
         validation = db.validate_promocode(promocode)
         if validation["valid"]:
             price = db.apply_discount(price, validation["discount_type"], validation["discount_value"])
             db.use_promocode(promocode)
             await state.update_data(discount_applied=True)
-
+    
     emoji_item = EMOJI['stars'] if item_type == "stars" else EMOJI['premium']
-
+    
     await callback.message.edit_text(
         f"{EMOJI['wait']} <b>Обработка покупки...</b>\n\n"
         "Транзакция отправляется в блокчейн TON.\n"
         "Пожалуйста, подождите..."
     )
-
+    
     try:
         async with FragmentService() as fragment:
             if item_type == "stars":
                 result = await fragment.buy_stars(username, item_amount)
             else:
                 result = await fragment.buy_premium(username, item_amount)
-
+        
         if result.get("success"):
             tx_id = result.get("transaction_id", "unknown")
-
-            # Сохраняем покупку с ID заказа
+            
             purchase = db.add_purchase(
                 user_id=callback.from_user.id,
                 p_type=item_type,
@@ -1239,16 +1216,19 @@ async def process_confirm(callback: CallbackQuery, state: FSMContext):
                 price=price,
                 transaction_id=tx_id
             )
-
+            
             order_id = purchase["order_id"]
-
-            # Обновляем статистику
+            
             stars = item_amount if item_type == "stars" else 0
             premium_months = item_amount if item_type == "premium" else 0
             db.update_user_stats(callback.from_user.id, stars, premium_months)
-
-            test_mode_msg = f"\n{EMOJI['warning']} <b>ТЕСТОВЫЙ РЕЖИМ</b> — средства не списаны" if TEST_MODE else ""
-
+            
+            test_mode_msg = ""
+            if TEST_MODE:
+                test_mode_msg = f"\n{EMOJI['warning']} <b>ТЕСТОВЫЙ РЕЖИМ</b> — средства не списаны"
+            
+            tx_display = tx_id[:20] if tx_id else "N/A"
+            
             await callback.message.edit_text(
                 f"{EMOJI['success']} <b>Покупка успешно выполнена!</b>{test_mode_msg}\n\n"
                 f"{EMOJI['id']} <b>ID заказа:</b> <code>{order_id}</code>\n"
@@ -1256,20 +1236,20 @@ async def process_confirm(callback: CallbackQuery, state: FSMContext):
                 f"{EMOJI['user']} <b>Получатель:</b> @{username}\n"
                 f"{EMOJI['package']} <b>Количество:</b> {item_amount} {'⭐' if item_type == 'stars' else 'мес.'}\n"
                 f"{EMOJI['money']} <b>Сумма:</b> {safe_format(price)} TON\n"
-                f"{EMOJI['id']} <b>TX ID:</b> <code>{tx_id[:20] if tx_id else 'N/A'}...</code>\n\n"
+                f"{EMOJI['id']} <b>TX ID:</b> <code>{tx_display}...</code>\n\n"
                 f"{EMOJI['party']} <b>Статус:</b> Доставлено!\n\n"
-                f"✨ Спасибо за использование бота!",
+                "✨ Спасибо за использование бота!",
                 reply_markup=get_main_keyboard()
             )
-
-            # Уведомление админам
+            
             for admin_id in ADMIN_IDS:
                 try:
+                    user_username = callback.from_user.username or "unknown"
                     await bot.send_message(
                         admin_id,
                         f"{EMOJI['cart']} <b>Новая покупка!</b>\n\n"
                         f"{EMOJI['id']} <b>Заказ:</b> <code>{order_id}</code>\n"
-                        f"{EMOJI['user']} <b>Пользователь:</b> @{callback.from_user.username or 'unknown'}\n"
+                        f"{EMOJI['user']} <b>Пользователь:</b> @{user_username}\n"
                         f"{emoji_item} <b>Товар:</b> {'Stars' if item_type == 'stars' else 'Premium'}\n"
                         f"{EMOJI['package']} <b>Кол-во:</b> {item_amount}\n"
                         f"{EMOJI['user']} <b>Получатель:</b> @{username}\n"
@@ -1283,14 +1263,14 @@ async def process_confirm(callback: CallbackQuery, state: FSMContext):
             await callback.message.edit_text(
                 f"{EMOJI['error']} <b>Ошибка покупки</b>\n\n{error_msg}\n\n"
                 f"<b>{EMOJI['warning']} Возможные причины:</b>\n"
-                f"• Недостаточно TON на кошельке\n"
-                f"• Неправильный username\n"
-                f"• Проблемы с cookies Fragment\n"
-                f"• Пользователь не зарегистрирован в Telegram\n\n"
-                f"Попробуйте позже или обратитесь к администратору.",
+                "• Недостаточно TON на кошельке\n"
+                "• Неправильный username\n"
+                "• Проблемы с cookies Fragment\n"
+                "• Пользователь не зарегистрирован в Telegram\n\n"
+                "Попробуйте позже или обратитесь к администратору.",
                 reply_markup=get_main_keyboard()
             )
-
+    
     except Exception as e:
         logger.error(f"Критическая ошибка: {e}")
         db.add_log("CRITICAL", "purchase", str(e)[:200])
@@ -1298,15 +1278,14 @@ async def process_confirm(callback: CallbackQuery, state: FSMContext):
             f"{EMOJI['error']} <b>Критическая ошибка</b>\n\n"
             f"Причина: {str(e)[:200]}\n\n"
             f"<b>{EMOJI['check']} Проверьте:</b>\n"
-            f"• Cookies Fragment (актуальны?)\n"
-            f"• SEED фразу (верна?)\n"
-            f"• Баланс кошелька\n\n"
-            f"Попробуйте позже.",
+            "• Cookies Fragment (актуальны?)\n"
+            "• SEED фразу (верна?)\n"
+            "• Баланс кошелька\n\n"
+            "Попробуйте позже.",
             reply_markup=get_main_keyboard()
         )
-
+    
     await state.clear()
-
 
 @dp.callback_query(F.data == "apply_promocode")
 async def callback_apply_promocode(callback: CallbackQuery, state: FSMContext):
@@ -1319,7 +1298,6 @@ async def callback_apply_promocode(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_back_keyboard()
     )
 
-
 @dp.callback_query(F.data == "cancel_purchase")
 async def process_cancel(callback: CallbackQuery, state: FSMContext):
     await state.clear()
@@ -1330,7 +1308,6 @@ async def process_cancel(callback: CallbackQuery, state: FSMContext):
         reply_markup=get_main_keyboard()
     )
 
-
 @dp.message(Command("cancel"))
 async def cmd_cancel(message: Message, state: FSMContext):
     if await state.get_state():
@@ -1338,7 +1315,6 @@ async def cmd_cancel(message: Message, state: FSMContext):
         await message.answer(f"{EMOJI['cancel']} Операция отменена.", reply_markup=get_main_keyboard())
     else:
         await message.answer("Нет активных операций для отмены.", reply_markup=get_main_keyboard())
-
 
 @dp.callback_query(F.data == "deposit")
 async def callback_deposit(callback: CallbackQuery):
@@ -1354,10 +1330,9 @@ async def callback_deposit(callback: CallbackQuery):
             [
                 InlineKeyboardButton(text="💳 CrystalPay", callback_data="deposit_crystalpay"),
             ],
-            [InlineKeyboardButton(text=f"{EMOJI['back']} Назад", callback_data="back_to_main")],
+            [InlineKeyboardButton(text=EMOJI['back'] + " Назад", callback_data="back_to_main")],
         ])
     )
-
 
 @dp.callback_query(F.data.startswith("deposit_"))
 async def process_deposit(callback: CallbackQuery):
@@ -1365,14 +1340,13 @@ async def process_deposit(callback: CallbackQuery):
     await callback.message.edit_text(
         f"{EMOJI['warning']} <b>Функция пополнения в разработке</b>\n\n"
         "Пока вы можете пополнить баланс через:\n"
-        f"• Binance, Bybit, OKX\n"
-        f"• P2P обменники\n"
-        f"• Криптообменники (BestChange)\n\n"
+        "• Binance, Bybit, OKX\n"
+        "• P2P обменники\n"
+        "• Криптообменники (BestChange)\n\n"
         f"{EMOJI['wallet']} <b>Адрес кошелька TON:</b>\n"
-        f"<code>EQD...ваш_адрес</code>",
+        "<code>EQD...ваш_адрес</code>",
         reply_markup=get_back_keyboard()
     )
-
 
 @dp.message()
 async def handle_unknown(message: Message):
@@ -1386,19 +1360,22 @@ async def handle_unknown(message: Message):
 # ========== ЗАПУСК БОТА ==========
 async def main():
     print(f"{EMOJI['rocket']} Fragment Bot запускается...")
-
+    
     if TEST_MODE:
         print(f"{EMOJI['warning']} ТЕСТОВЫЙ РЕЖИМ ВКЛЮЧЕН - реальные покупки не выполняются")
     else:
         print(f"{EMOJI['money']} РЕАЛЬНЫЙ РЕЖИМ - будут списываться средства с TON кошелька")
-
+    
     try:
         from pyfragment import FragmentClient
         print(f"{EMOJI['success']} pyfragment установлен")
     except ImportError:
         print(f"{EMOJI['error']} pyfragment не установлен! Установите: pip install pyfragment")
-
+    
     await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
 
 if __name__ == "__main__":

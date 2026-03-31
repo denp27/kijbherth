@@ -26,5 +26,5 @@ annotated-types~=0.7.0
 charset-normalizer~=3.4.6
 tonutils~=2.0.4
 pycryptodomex~=3.23.0
-pyfragment~=2026.1.0
+pyfragment>=2026.0.2
 x25519~=0.0.2

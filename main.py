@@ -99,22 +99,22 @@ def safe_str(value: Any) -> str:
 
 # ========== НАСТРОЙКА ==========
 # Получите токен у @BotFather
-BOT_TOKEN = "7867924002:AAE_Qf-PV9majqO_v_svflixeQZKEzswAcQ"
+BOT_TOKEN = ""
 
 # Данные Fragment (получите по инструкции ниже)
-SEED_PHRASE = "concert rude brisk slam supply critic inmate hub away farm cheese there green fortune divide laugh joy toddler super put deposit tell atom federal"
-TONAPI_KEY = "AGSYKDWOUNFDUNAAAAAJ36FULVZES5ZLQKQ7PSPMCZZ7BUYJ4FTNQLRPTI4Y3WA6O6NLH2Y"
+SEED_PHRASE = ""
+TONAPI_KEY = ""
 
 # Cookies Fragment (4 ключа)
 FRAGMENT_COOKIES = {
-    "stel_ssid": "1f5d571d9640e7d909_7948737683376495909",
-    "stel_dt": "-180",
-    "stel_token": "271bb5ba9d843c1f4eafd607aa7eddf2271bb5a0271bb6ba331465a0c688869a9f98d",
-    "stel_ton_token": "wnqN-yK3T0K4fpNz1FHWtSmVQC0wiA9D5-EHHsY4xDIs_tYJHRShdEqCnBLxCiVSJAoovtGs1KfS4cnBv7HtLw-WdkghIFeABzTxY1d4LBc2h_GZFCwKu9Br02RjFiRE916jXHXytjvq5eYaMk2fvpUFjdoDhRNd55d13o6Qx4Q82JsxG3BhnOAwUP11J54Rhjt3cbUn",
+    "stel_ssid": "",
+    "stel_dt": "",
+    "stel_token": "",
+    "stel_ton_token": "",
 }
 
 # Настройки
-ADMIN_IDS = [8429942952]  # ID администраторов
+ADMIN_IDS = []  # ID администраторов
 
 # Платежные системы (опционально)
 CRYPTOBOT_TOKEN = ""

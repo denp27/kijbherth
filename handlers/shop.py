@@ -8,10 +8,10 @@ from pathlib import Path
 
 sys.path.append(str(Path(__file__).parent.parent))
 
-from database import get_user, get_balance, deduct_balance, add_purchase
-from keyboards.inline import get_back_to_main_keyboard, get_main_menu
+from database import get_user, get_balance, deduct_balance, add_purchase, add_balance_topup
+from keyboards import get_back_to_main_keyboard, get_main_menu
 from config import ADMIN_IDS
-from utils.fragment_client import get_fragment_service
+from utils.fragment_client import get_fragment_client
 
 router = Router()
 
@@ -22,15 +22,43 @@ class GiftState(StatesGroup):
 
 
 def get_stars_price(amount: int) -> float:
-    """Цены Stars в рублях"""
     prices = {50: 59, 100: 99, 250: 229, 500: 429, 1000: 799, 2500: 1899, 5000: 3599}
     return prices.get(amount, amount)
 
 
 def get_premium_price(months: int) -> float:
-    """Цены Premium в рублях"""
     prices = {3: 299, 6: 499, 12: 799}
     return prices.get(months, months * 100)
+
+
+async def show_payment_methods(obj, amount: float, is_topup: bool = False):
+    """Показать способы оплаты - вызывается из user.py"""
+    from database import add_balance_topup
+    
+    user_id = obj.from_user.id if hasattr(obj, 'from_user') else obj.chat.id
+    
+    # Создаем заявку на пополнение
+    topup_id = add_balance_topup(user_id, amount, "pending")
+    
+    text = f"""💰 Оплата
+
+Сумма: {amount}₽
+
+Выберите способ оплаты:"""
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="⭐ Купить через Fragment (Stars/Premium)", callback_data=f"buy_via_fragment_{topup_id}_{amount}")],
+        [InlineKeyboardButton(text="❌ Отмена", callback_data="topup")]
+    ])
+    
+    if isinstance(obj, CallbackQuery):
+        try:
+            await obj.message.edit_text(text, reply_markup=keyboard)
+        except:
+            await obj.message.delete()
+            await obj.message.answer(text, reply_markup=keyboard)
+    else:
+        await obj.answer(text, reply_markup=keyboard)
 
 
 @router.callback_query(F.data == "shop")
@@ -52,6 +80,7 @@ async def show_shop(callback: CallbackQuery):
     except:
         await callback.message.delete()
         await callback.message.answer(text, reply_markup=keyboard)
+    
     await callback.answer()
 
 
@@ -115,14 +144,12 @@ async def buy_stars_item(callback: CallbackQuery):
         await callback.answer()
         return
     
-    # Отправляем статус "обработка"
     await callback.message.edit_text(
         f"⏳ Отправка {amount} Stars пользователю @{username}...\n\n"
         f"Пожалуйста, подождите, операция может занять до 30 секунд."
     )
     
-    # Покупка через Fragment
-    fragment = get_fragment_service()
+    fragment = get_fragment_client()
     if not fragment:
         await callback.message.edit_text(
             "❌ Сервис покупки временно недоступен. Попробуйте позже.",
@@ -133,8 +160,7 @@ async def buy_stars_item(callback: CallbackQuery):
     
     result = await fragment.purchase_stars(username, amount)
     
-    if result['success']:
-        # Списание средств
+    if result.get('success'):
         deduct_balance(user_id, price)
         add_purchase(user_id, "stars", amount, price, "fragment", None, False)
         
@@ -148,8 +174,9 @@ async def buy_stars_item(callback: CallbackQuery):
             reply_markup=get_back_to_main_keyboard()
         )
     else:
+        error_msg = result.get('error', 'Неизвестная ошибка')
         await callback.message.edit_text(
-            f"❌ Ошибка при покупке: {result.get('error', 'Неизвестная ошибка')}\n\n"
+            f"❌ Ошибка при покупке: {error_msg}\n\n"
             f"Средства не были списаны. Попробуйте позже.",
             reply_markup=get_back_to_main_keyboard()
         )
@@ -192,7 +219,7 @@ async def buy_premium_item(callback: CallbackQuery):
         f"Пожалуйста, подождите, операция может занять до 30 секунд."
     )
     
-    fragment = get_fragment_service()
+    fragment = get_fragment_client()
     if not fragment:
         await callback.message.edit_text(
             "❌ Сервис покупки временно недоступен. Попробуйте позже.",
@@ -203,7 +230,7 @@ async def buy_premium_item(callback: CallbackQuery):
     
     result = await fragment.purchase_premium(username, months)
     
-    if result['success']:
+    if result.get('success'):
         deduct_balance(user_id, price)
         add_purchase(user_id, "premium", months, price, "fragment", None, False)
         
@@ -217,8 +244,9 @@ async def buy_premium_item(callback: CallbackQuery):
             reply_markup=get_back_to_main_keyboard()
         )
     else:
+        error_msg = result.get('error', 'Неизвестная ошибка')
         await callback.message.edit_text(
-            f"❌ Ошибка при покупке: {result.get('error', 'Неизвестная ошибка')}\n\n"
+            f"❌ Ошибка при покупке: {error_msg}\n\n"
             f"Средства не были списаны. Попробуйте позже.",
             reply_markup=get_back_to_main_keyboard()
         )
@@ -328,10 +356,10 @@ async def process_gift_item(message: Message, state: FSMContext):
         
         await message.answer(f"⏳ Отправка {amount} Stars пользователю...")
         
-        fragment = get_fragment_service()
+        fragment = get_fragment_client()
         result = await fragment.purchase_stars(gift_username, amount)
         
-        if result['success']:
+        if result.get('success'):
             deduct_balance(message.from_user.id, price)
             add_purchase(message.from_user.id, "stars_gift", amount, price, "fragment", str(gift_to_id), True)
             
@@ -352,8 +380,9 @@ async def process_gift_item(message: Message, state: FSMContext):
                 reply_markup=get_main_menu(message.from_user.id)
             )
         else:
+            error_msg = result.get('error', 'Неизвестная ошибка')
             await message.answer(
-                f"❌ Ошибка при отправке подарка: {result.get('error', 'Неизвестная ошибка')}\n\n"
+                f"❌ Ошибка при отправке подарка: {error_msg}\n\n"
                 f"Средства не были списаны.",
                 reply_markup=get_main_menu(message.from_user.id)
             )
@@ -381,10 +410,10 @@ async def process_gift_item(message: Message, state: FSMContext):
         
         await message.answer(f"⏳ Оформление Premium на {months} месяцев...")
         
-        fragment = get_fragment_service()
+        fragment = get_fragment_client()
         result = await fragment.purchase_premium(gift_username, months)
         
-        if result['success']:
+        if result.get('success'):
             deduct_balance(message.from_user.id, price)
             add_purchase(message.from_user.id, "premium_gift", months, price, "fragment", str(gift_to_id), True)
             
@@ -405,12 +434,16 @@ async def process_gift_item(message: Message, state: FSMContext):
                 reply_markup=get_main_menu(message.from_user.id)
             )
         else:
+            error_msg = result.get('error', 'Неизвестная ошибка')
             await message.answer(
-                f"❌ Ошибка при отправке подарка: {result.get('error', 'Неизвестная ошибка')}\n\n"
+                f"❌ Ошибка при отправке подарка: {error_msg}\n\n"
                 f"Средства не были списаны.",
                 reply_markup=get_main_menu(message.from_user.id)
             )
         
+        await state.clear()
+    else:
+        await message.answer("❌ Пожалуйста, выберите пункт из списка (1-7)")
         await state.clear()
     else:
         await message.answer("❌ Пожалуйста, выберите пункт из списка (1-7)")

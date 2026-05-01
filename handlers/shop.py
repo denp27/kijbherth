@@ -9,7 +9,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from database import get_user, get_balance, deduct_balance, add_purchase, add_balance_topup
-from keyboards import get_back_to_main_keyboard, get_main_menu
+from keyboards.inline import get_back_to_main_keyboard, get_main_menu
 from config import ADMIN_IDS
 from utils.fragment_client import get_fragment_client
 

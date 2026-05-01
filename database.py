@@ -142,6 +142,56 @@ def get_user_by_referral_code(code: str) -> Optional[Dict]:
     conn.close()
     return dict(user) if user else None
 
+def get_stats() -> Dict:
+    """Get bot statistics"""
+    conn = sqlite3.connect(DB_NAME)
+    c = conn.cursor()
+    
+    c.execute("SELECT COUNT(*) FROM users")
+    total_users = c.fetchone()[0]
+    
+    c.execute("SELECT SUM(price) FROM purchases WHERE status = 'completed'")
+    total_revenue = c.fetchone()[0] or 0
+    
+    c.execute("SELECT COUNT(*) FROM purchases WHERE status = 'completed'")
+    total_purchases = c.fetchone()[0] or 0
+    
+    c.execute("SELECT SUM(amount) FROM purchases WHERE type = 'stars' AND status = 'completed'")
+    total_stars_sold = c.fetchone()[0] or 0
+    
+    c.execute("SELECT COUNT(*) FROM purchases WHERE type = 'premium' AND status = 'completed'")
+    total_premium_sold = c.fetchone()[0] or 0
+    
+    c.execute("SELECT SUM(referral_earnings) FROM users")
+    total_referral_paid = c.fetchone()[0] or 0
+    
+    c.execute("SELECT COUNT(*) FROM user_tasks WHERE status = 'pending'")
+    pending_tasks = c.fetchone()[0] or 0
+    
+    # ИСПРАВЛЕНО: делаем JOIN с таблицей tasks для получения reward
+    c.execute('''SELECT SUM(t.reward) FROM user_tasks ut 
+                 JOIN tasks t ON ut.task_id = t.id 
+                 WHERE ut.status = 'approved' ''')
+    total_rewards_paid = c.fetchone()[0] or 0
+    
+    today = datetime.now().date()
+    c.execute("SELECT SUM(price) FROM purchases WHERE status = 'completed' AND DATE(completed_at) = ?", (today,))
+    today_revenue = c.fetchone()[0] or 0
+    
+    conn.close()
+    
+    return {
+        'total_users': total_users,
+        'total_revenue': total_revenue,
+        'total_purchases': total_purchases,
+        'total_stars_sold': total_stars_sold,
+        'total_premium_sold': total_premium_sold,
+        'total_referral_paid': total_referral_paid,
+        'pending_tasks': pending_tasks,
+        'total_rewards_paid': total_rewards_paid,
+        'today_revenue': today_revenue
+    }
+
 
 def create_user(user_id: int, username: str = "", first_name: str = "", referred_by: int = None):
     referral_code = hashlib.md5(f"{user_id}{datetime.now()}".encode()).hexdigest()[:8]

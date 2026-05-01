@@ -444,6 +444,3 @@ async def process_gift_item(message: Message, state: FSMContext):
         await state.clear()
     else:
         await message.answer("❌ Пожалуйста, выберите пункт из списка (1-7)")
-        await state.clear()
-    else:
-        await message.answer("❌ Пожалуйста, выберите пункт из списка (1-7)")

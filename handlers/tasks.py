@@ -19,7 +19,7 @@ from database import (
     get_user_completed_tasks,
     get_task
 )
-from keyboards import tasks_keyboard, task_detail_keyboard, confirm_keyboard, back_keyboard
+from keyboards.inline import tasks_keyboard, task_detail_keyboard, confirm_keyboard, back_keyboard
 from config import ADMIN_IDS
 
 router = Router()

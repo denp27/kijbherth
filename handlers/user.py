@@ -20,7 +20,7 @@ from database import (
     get_promocode,
     use_promocode
 )
-from keyboards import get_main_menu, get_topup_menu, get_back_to_main_keyboard
+from keyboards.inline import get_main_menu, get_topup_menu, get_back_to_main_keyboard
 from config import REFERRAL_BONUS, REFERRAL_REWARD_PERCENT, get_premium_emoji, ADMIN_IDS, SUPPORT_ADMIN, SUPPORT_EMAIL
 
 router = Router()

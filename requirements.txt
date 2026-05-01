@@ -1,2 +1,4 @@
-aiohttp~=3.13.4
-aiogram~=3.26.0
+aiogram==3.10.0
+python-dotenv==1.0.0
+aiohttp==3.9.1
+aiosend>=1.0.3

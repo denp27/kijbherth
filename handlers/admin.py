@@ -11,7 +11,7 @@ from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from database import get_all_users, get_user, ban_user, unban_user, update_balance, get_stats, add_promocode, get_user_purchases
-from keyboards import get_admin_menu, get_admin_users_list, get_admin_user_actions, get_mailing_keyboard, get_mailing_confirm_keyboard, get_admin_prices_keyboard, get_back_to_main_keyboard
+from keyboards.inline import get_admin_menu, get_admin_users_list, get_admin_user_actions, get_mailing_keyboard, get_mailing_confirm_keyboard, get_admin_prices_keyboard, get_back_to_main_keyboard
 from config import ADMIN_IDS, STARS_PRICES, PREMIUM_PRICES
 
 router = Router()

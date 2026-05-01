@@ -15,13 +15,16 @@ from database import (
     create_user, 
     update_balance, 
     get_user_purchases, 
-    apply_promocode_reward, 
     get_balance,
     get_promocode,
     use_promocode
 )
-from keyboards.inline import get_main_menu, get_topup_menu, get_back_to_main_keyboard
-from config import REFERRAL_BONUS, REFERRAL_REWARD_PERCENT, get_premium_emoji, ADMIN_IDS, SUPPORT_ADMIN, SUPPORT_EMAIL
+from keyboards import get_main_menu, get_topup_menu, get_back_to_main_keyboard
+from config import REFERRAL_BONUS, REFERRAL_REWARD_PERCENT, ADMIN_IDS
+
+# Убираем get_premium_emoji, используем простые эмодзи
+def get_simple_emoji() -> str:
+    return "⭐"
 
 router = Router()
 
@@ -58,20 +61,16 @@ async def cmd_start(message: Message):
     
     balance = user['balance'] if user else 0
     
-    text = f"""{get_premium_emoji()} <b>Добро пожаловать в Telegram Stars & Premium Bot!</b> {get_premium_emoji()}
+    # Используем простой текст без сложных эмодзи
+    text = f"""⭐ Добро пожаловать в Telegram Stars & Premium Bot! ⭐
 
-⭐ Здесь вы можете купить Telegram Stars и Premium подписку
+Здесь вы можете купить Telegram Stars и Premium подписку
 
-💰 <b>Ваш баланс:</b> {balance}₽
+💰 Ваш баланс: {balance}₽
 
-🚀 <b>Выберите действие:</b>"""
+🚀 Выберите действие:"""
     
-    try:
-        await message.answer(text, reply_markup=get_main_menu(user_id), parse_mode="HTML")
-    except Exception as e:
-        # Если ошибка с HTML, отправляем без форматирования
-        plain_text = text.replace("<b>", "").replace("</b>", "")
-        await message.answer(plain_text, reply_markup=get_main_menu(user_id))
+    await message.answer(text, reply_markup=get_main_menu(user_id))
 
 
 @router.message(Command("menu"))
@@ -82,15 +81,11 @@ async def cmd_menu(message: Message):
         return
     
     balance = user['balance'] if user else 0
-    text = f"""{get_premium_emoji()} <b>Главное меню</b> {get_premium_emoji()}
+    text = f"""⭐ Главное меню ⭐
 
-💰 <b>Ваш баланс:</b> {balance}₽"""
+💰 Ваш баланс: {balance}₽"""
     
-    try:
-        await message.answer(text, reply_markup=get_main_menu(message.from_user.id), parse_mode="HTML")
-    except:
-        plain_text = text.replace("<b>", "").replace("</b>", "")
-        await message.answer(plain_text, reply_markup=get_main_menu(message.from_user.id))
+    await message.answer(text, reply_markup=get_main_menu(message.from_user.id))
 
 
 @router.message(Command("balance"))
@@ -101,12 +96,12 @@ async def cmd_balance(message: Message):
         return
     
     balance = user['balance'] if user else 0
-    await message.answer(f"{get_premium_emoji()} <b>Ваш баланс:</b> {balance}₽", parse_mode="HTML")
+    await message.answer(f"💰 Ваш баланс: {balance}₽")
 
 
 @router.message(Command("myid"))
 async def get_my_id(message: Message):
-    await message.answer(f"✅ <b>Ваш ID:</b> <code>{message.from_user.id}</code>", parse_mode="HTML")
+    await message.answer(f"✅ Ваш ID: {message.from_user.id}")
 
 
 @router.callback_query(F.data == "back_to_main")
@@ -117,16 +112,15 @@ async def back_to_main(callback: CallbackQuery):
         return
     
     balance = user['balance'] if user else 0
-    text = f"""{get_premium_emoji()} <b>Главное меню</b> {get_premium_emoji()}
+    text = f"""⭐ Главное меню ⭐
 
-💰 <b>Ваш баланс:</b> {balance}₽"""
+💰 Ваш баланс: {balance}₽"""
     
     try:
-        await callback.message.edit_text(text, reply_markup=get_main_menu(callback.from_user.id), parse_mode="HTML")
+        await callback.message.edit_text(text, reply_markup=get_main_menu(callback.from_user.id))
     except:
         await callback.message.delete()
-        plain_text = text.replace("<b>", "").replace("</b>", "")
-        await callback.message.answer(plain_text, reply_markup=get_main_menu(callback.from_user.id))
+        await callback.message.answer(text, reply_markup=get_main_menu(callback.from_user.id))
     
     await callback.answer()
 
@@ -151,25 +145,27 @@ async def show_profile(callback: CallbackQuery):
     if registered_at and len(registered_at) > 10:
         registered_at = registered_at[:10]
     
-    text = f"""{get_premium_emoji()} <b>Мой профиль</b> {get_premium_emoji()}
+    text = f"""⭐ Мой профиль ⭐
 
-🆔 <b>ID:</b> <code>{user['user_id']}</code>
-👤 <b>Имя:</b> {user.get('first_name', 'Без имени')}
-💰 <b>Баланс:</b> {user.get('balance', 0)}₽
-💸 <b>Потрачено:</b> {user.get('total_spent', 0)}₽
-👥 <b>Рефералов:</b> {user.get('referral_count', 0)}
-🎁 <b>Заработано с рефералов:</b> {user.get('referral_earnings', 0)}₽
-📅 <b>Регистрация:</b> {registered_at}
+🆔 ID: {user['user_id']}
+👤 Имя: {user.get('first_name', 'Без имени')}
+💰 Баланс: {user.get('balance', 0)}₽
+💸 Потрачено: {user.get('total_spent', 0)}₽
+👥 Рефералов: {user.get('referral_count', 0)}
+🎁 Заработано с рефералов: {user.get('referral_earnings', 0)}₽
+📅 Регистрация: {registered_at}
 
-📜 <b>Последние покупки:</b>
+📜 Последние покупки:
 {purchases_text}"""
     
     try:
-        await callback.message.edit_text(text, reply_markup=get_back_to_main_keyboard(), parse_mode="HTML")
-    except:
-        await callback.message.delete()
-        plain_text = text.replace("<b>", "").replace("</b>", "").replace("<code>", "").replace("</code>", "")
-        await callback.message.answer(plain_text, reply_markup=get_back_to_main_keyboard())
+        await callback.message.edit_text(text, reply_markup=get_back_to_main_keyboard())
+    except Exception as e:
+        try:
+            await callback.message.delete()
+            await callback.message.answer(text, reply_markup=get_back_to_main_keyboard())
+        except:
+            pass
     
     await callback.answer()
 
@@ -185,14 +181,13 @@ async def show_balance(callback: CallbackQuery):
     
     try:
         await callback.message.edit_text(
-            f"{get_premium_emoji()} <b>Ваш баланс:</b> {balance}₽",
-            reply_markup=get_back_to_main_keyboard(),
-            parse_mode="HTML"
+            f"💰 Ваш баланс: {balance}₽",
+            reply_markup=get_back_to_main_keyboard()
         )
     except:
         await callback.message.delete()
         await callback.message.answer(
-            f"{get_premium_emoji()} Ваш баланс: {balance}₽",
+            f"💰 Ваш баланс: {balance}₽",
             reply_markup=get_back_to_main_keyboard()
         )
     
@@ -203,14 +198,13 @@ async def show_balance(callback: CallbackQuery):
 async def topup_menu(callback: CallbackQuery):
     try:
         await callback.message.edit_text(
-            f"{get_premium_emoji()} <b>Пополнение баланса</b>\n\nВыберите сумму:",
-            reply_markup=get_topup_menu(),
-            parse_mode="HTML"
+            "💰 Пополнение баланса\n\nВыберите сумму:",
+            reply_markup=get_topup_menu()
         )
     except:
         await callback.message.delete()
         await callback.message.answer(
-            f"{get_premium_emoji()} Пополнение баланса\n\nВыберите сумму:",
+            "💰 Пополнение баланса\n\nВыберите сумму:",
             reply_markup=get_topup_menu()
         )
     
@@ -221,13 +215,12 @@ async def topup_menu(callback: CallbackQuery):
 async def topup_custom(callback: CallbackQuery, state: FSMContext):
     try:
         await callback.message.edit_text(
-            f"{get_premium_emoji()} <b>Пополнение баланса</b>\n\nВведите сумму от 1 до 50000₽:",
-            parse_mode="HTML"
+            "💰 Пополнение баланса\n\nВведите сумму от 1 до 50000₽:"
         )
     except:
         await callback.message.delete()
         await callback.message.answer(
-            f"{get_premium_emoji()} Пополнение баланса\n\nВведите сумму от 1 до 50000₽:"
+            "💰 Пополнение баланса\n\nВведите сумму от 1 до 50000₽:"
         )
     
     await state.set_state(TopUpState.waiting_for_amount)
@@ -269,14 +262,13 @@ async def process_topup_amount(message: Message, state: FSMContext):
 async def promo_start(callback: CallbackQuery, state: FSMContext):
     try:
         await callback.message.edit_text(
-            f"{get_premium_emoji()} <b>Промокод</b>\n\nВведите промокод:",
-            reply_markup=get_back_to_main_keyboard(),
-            parse_mode="HTML"
+            "🎫 Промокод\n\nВведите промокод:",
+            reply_markup=get_back_to_main_keyboard()
         )
     except:
         await callback.message.delete()
         await callback.message.answer(
-            f"{get_premium_emoji()} Промокод\n\nВведите промокод:",
+            "🎫 Промокод\n\nВведите промокод:",
             reply_markup=get_back_to_main_keyboard()
         )
     
@@ -294,9 +286,7 @@ async def process_promo(message: Message, state: FSMContext):
             reward = promo.get('reward', 0)
             update_balance(message.from_user.id, reward)
             await message.answer(
-                f"✅ <b>Промокод активирован!</b>\n\n"
-                f"💰 +{reward}₽ на баланс",
-                parse_mode="HTML",
+                f"✅ Промокод активирован!\n\n💰 +{reward}₽ на баланс",
                 reply_markup=get_main_menu(message.from_user.id)
             )
         else:
@@ -316,7 +306,7 @@ async def process_promo(message: Message, state: FSMContext):
 @router.callback_query(F.data == "history")
 async def show_history(callback: CallbackQuery):
     purchases = get_user_purchases(callback.from_user.id)
-    text = f"{get_premium_emoji()} <b>История покупок</b> {get_premium_emoji()}\n\n"
+    text = "⭐ История покупок ⭐\n\n"
     
     if not purchases:
         text = "📜 У вас пока нет покупок."
@@ -326,23 +316,24 @@ async def show_history(callback: CallbackQuery):
             if created_at and len(created_at) > 16:
                 created_at = created_at[:16]
             
-            text += f"🧾 <b>Заказ #{p.get('order_number', 'N/A')}</b>\n"
+            text += f"🧾 Заказ #{p.get('order_number', 'N/A')}\n"
             text += f"   📦 {p.get('type', 'N/A').upper()}: {p.get('amount', 0)} - {p.get('price', 0)}₽\n"
             text += f"   📅 {created_at}\n"
             text += f"   ✅ Статус: {p.get('status', 'pending')}\n\n"
     
     try:
-        await callback.message.edit_text(text, reply_markup=get_back_to_main_keyboard(), parse_mode="HTML")
+        await callback.message.edit_text(text, reply_markup=get_back_to_main_keyboard())
     except:
         await callback.message.delete()
-        plain_text = text.replace("<b>", "").replace("</b>", "")
-        await callback.message.answer(plain_text, reply_markup=get_back_to_main_keyboard())
+        await callback.message.answer(text, reply_markup=get_back_to_main_keyboard())
     
     await callback.answer()
 
 
 @router.callback_query(F.data == "support")
 async def support_menu(callback: CallbackQuery):
+    from config import SUPPORT_ADMIN, SUPPORT_EMAIL
+    
     support_admin = getattr(SUPPORT_ADMIN, '__str__', 'admin')
     support_email = getattr(SUPPORT_EMAIL, '__str__', 'support@example.com')
     
@@ -356,14 +347,13 @@ async def support_menu(callback: CallbackQuery):
     
     try:
         await callback.message.edit_text(
-            f"{get_premium_emoji()} <b>Служба поддержки</b> {get_premium_emoji()}\n\nСвяжитесь с нами:",
-            reply_markup=keyboard,
-            parse_mode="HTML"
+            "📞 Служба поддержки\n\nСвяжитесь с нами:",
+            reply_markup=keyboard
         )
     except:
         await callback.message.delete()
         await callback.message.answer(
-            f"{get_premium_emoji()} Служба поддержки {get_premium_emoji()}\n\nСвяжитесь с нами:",
+            "📞 Служба поддержки\n\nСвяжитесь с нами:",
             reply_markup=keyboard
         )
     
@@ -380,20 +370,20 @@ async def referral_info(callback: CallbackQuery):
     referral_code = user.get('referral_code', '')
     bot_username = (await callback.bot.get_me()).username
     
-    text = f"""{get_premium_emoji()} <b>Реферальная система</b> {get_premium_emoji()}
+    text = f"""👥 Реферальная система
 
-👥 <b>Ваша статистика:</b>
+Ваша статистика:
 • Приглашено друзей: {user.get('referral_count', 0)}
 • Заработано: {user.get('referral_earnings', 0)}₽
 
-🎁 <b>Бонусы:</b>
+Бонусы:
 • За каждого приглашенного: +{REFERRAL_BONUS}₽
 • {REFERRAL_REWARD_PERCENT}% от покупок рефералов
 
-🔗 <b>Ваша реферальная ссылка:</b>
-<code>https://t.me/{bot_username}?start={referral_code}</code>
+Ваша реферальная ссылка:
+https://t.me/{bot_username}?start={referral_code}
 
-💡 <i>Отправьте эту ссылку другу! При переходе и регистрации вы получите бонус.</i>"""
+Отправьте эту ссылку другу! При переходе и регистрации вы получите бонус."""
     
     keyboard = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text="🔗 Поделиться", switch_inline_query=referral_code)],
@@ -401,10 +391,11 @@ async def referral_info(callback: CallbackQuery):
     ])
     
     try:
-        await callback.message.edit_text(text, reply_markup=keyboard, parse_mode="HTML")
+        await callback.message.edit_text(text, reply_markup=keyboard)
     except:
         await callback.message.delete()
-        plain_text = text.replace("<b>", "").replace("</b>", "").replace("<code>", "").replace("</code>", "").replace("<i>", "").replace("</i>", "")
-        await callback.message.answer(plain_text, reply_markup=keyboard)
+        await callback.message.answer(text, reply_markup=keyboard)
     
     await callback.answer()
+    
+

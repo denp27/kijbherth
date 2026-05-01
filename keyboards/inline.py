@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from config import STARS_PRICES, PREMIUM_PRICES, PREMIUM_EMOJI_IDS, ADMIN_IDS
+from typing import List, Dict
 
 
 def get_main_menu(user_id: int = None):
@@ -9,36 +10,30 @@ def get_main_menu(user_id: int = None):
             InlineKeyboardButton(
                 text="Магазин",
                 callback_data="shop",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["shop"]
             ),
             InlineKeyboardButton(
                 text="Профиль",
                 callback_data="profile",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["profile"]
             ),
         ],
         [
             InlineKeyboardButton(
                 text="💰 Пополнить",
                 callback_data="topup",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["balance"]
             ),
             InlineKeyboardButton(
                 text="🎟️ Промокод",
                 callback_data="promo",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["gift"]
             ),
         ],
         [
             InlineKeyboardButton(
                 text="👥 Рефералы",
                 callback_data="referral_info",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["users"]
             ),
             InlineKeyboardButton(
                 text="📋 Задания",
                 callback_data="tasks_section",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["tasks"]
             ),
         ],
     ]
@@ -48,7 +43,6 @@ def get_main_menu(user_id: int = None):
             InlineKeyboardButton(
                 text="🔧 Админ панель",
                 callback_data="admin_panel",
-                icon_custom_emoji_id=PREMIUM_EMOJI_IDS["settings"]
             )
         ])
     
@@ -191,3 +185,193 @@ def get_admin_prices_keyboard():
             [InlineKeyboardButton(text="◀️ Назад", callback_data="admin_panel")],
         ]
     )
+
+
+# ============= ДОБАВЛЕННЫЕ ФУНКЦИИ ДЛЯ ЗАДАНИЙ =============
+
+def tasks_keyboard(tasks: List[Dict], completed_ids: List[int] = None) -> InlineKeyboardMarkup:
+    """Клавиатура со списком заданий"""
+    keyboard = []
+    
+    if not tasks:
+        keyboard.append([InlineKeyboardButton(text="📭 Нет доступных заданий", callback_data="noop")])
+    else:
+        for task in tasks:
+            if completed_ids and task['id'] in completed_ids:
+                status = "✅"
+            else:
+                status = "📋"
+            
+            keyboard.append([
+                InlineKeyboardButton(
+                    text=f"{status} {task['title']} - {task['reward']}⭐",
+                    callback_data=f"task_{task['id']}"
+                )
+            ])
+    
+    keyboard.append([InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_main")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def task_detail_keyboard(task_id: int) -> InlineKeyboardMarkup:
+    """Клавиатура деталей задания"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="▶️ Начать выполнение", callback_data=f"task_start_{task_id}")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="tasks_section")]
+    ])
+    return keyboard
+
+
+def confirm_keyboard(task_id: int) -> InlineKeyboardMarkup:
+    """Клавиатура подтверждения выполнения"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✅ Проверить выполнение", callback_data=f"task_check_{task_id}")],
+        [InlineKeyboardButton(text="📎 Отправить доказательство", callback_data=f"task_proof_{task_id}")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="tasks_section")]
+    ])
+    return keyboard
+
+
+def back_keyboard(task_id: int = None) -> InlineKeyboardMarkup:
+    """Клавиатура с кнопкой назад"""
+    if task_id:
+        back_callback = f"task_{task_id}"
+    else:
+        back_callback = "tasks_section"
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="◀️ Назад", callback_data=back_callback)]
+    ])
+    return keyboard
+
+
+def task_approve_keyboard(task_id: int, user_id: int) -> InlineKeyboardMarkup:
+    """Клавиатура для админа - подтверждение/отклонение задания"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Принять", callback_data=f"task_approve_{task_id}_{user_id}"),
+            InlineKeyboardButton(text="❌ Отклонить", callback_data=f"task_reject_{task_id}_{user_id}")
+        ]
+    ])
+    return keyboard
+
+
+# ============= ДОБАВЛЕННЫЕ АДМИН-ФУНКЦИИ ДЛЯ ЗАДАНИЙ =============
+
+def get_admin_tasks_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
+    """Клавиатура для управления заданиями (админ)"""
+    keyboard = []
+    
+    for task in tasks:
+        status = "✅" if task.get('is_active', 1) else "❌"
+        keyboard.append([
+            InlineKeyboardButton(
+                text=f"{status} {task['title']} ({task['reward']}⭐)",
+                callback_data=f"admin_edit_task_{task['id']}"
+            )
+        ])
+    
+    keyboard.append([InlineKeyboardButton(text="➕ Создать задание", callback_data="admin_create_task")])
+    keyboard.append([InlineKeyboardButton(text="◀️ Назад", callback_data="admin_panel")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_admin_pending_keyboard(tasks: List[Dict]) -> InlineKeyboardMarkup:
+    """Клавиатура для просмотра заявок (админ)"""
+    keyboard = []
+    
+    if tasks:
+        for task in tasks:
+            username = task.get('username') or task.get('first_name') or str(task.get('user_id', 'Unknown'))
+            keyboard.append([
+                InlineKeyboardButton(
+                    text=f"📝 {username} - {task.get('title', 'Задание')}",
+                    callback_data=f"admin_view_task_{task.get('task_id')}_{task.get('user_id')}"
+                )
+            ])
+    else:
+        keyboard.append([InlineKeyboardButton(text="📭 Нет заявок на проверку", callback_data="noop")])
+    
+    keyboard.append([InlineKeyboardButton(text="◀️ Назад", callback_data="admin_panel")])
+    
+    return InlineKeyboardMarkup(inline_keyboard=keyboard)
+
+
+def get_confirm_action_keyboard(action: str, task_id: int = None, user_id: int = None) -> InlineKeyboardMarkup:
+    """Универсальная клавиатура подтверждения действия"""
+    if task_id and user_id:
+        confirm_callback = f"{action}_{task_id}_{user_id}"
+    else:
+        confirm_callback = action
+    
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="✅ Да", callback_data=confirm_callback),
+            InlineKeyboardButton(text="❌ Нет", callback_data="cancel")
+        ]
+    ])
+    return keyboard
+
+
+# ============= ДОПОЛНИТЕЛЬНЫЕ ПОЛЕЗНЫЕ КЛАВИАТУРЫ =============
+
+def get_profile_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура профиля"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="📊 Моя статистика", callback_data="my_stats")],
+        [InlineKeyboardButton(text="👥 Мои рефералы", callback_data="my_referrals")],
+        [InlineKeyboardButton(text="🎫 Ввести промокод", callback_data="enter_promocode")],
+        [InlineKeyboardButton(text="📜 История покупок", callback_data="purchase_history")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_main")]
+    ])
+    return keyboard
+
+
+def get_referral_keyboard(referral_code: str) -> InlineKeyboardMarkup:
+    """Реферальная клавиатура"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔗 Поделиться ссылкой", switch_inline_query=referral_code)],
+        [InlineKeyboardButton(text="📊 Мои рефералы", callback_data="my_referrals")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_main")]
+    ])
+    return keyboard
+
+
+def get_promo_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура для ввода промокода"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🎫 Ввести промокод", callback_data="enter_promocode")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="back_to_profile")]
+    ])
+    return keyboard
+
+
+def get_promocode_admin_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура для управления промокодами (админ)"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="➕ Создать промокод", callback_data="admin_create_promocode")],
+        [InlineKeyboardButton(text="📋 Список промокодов", callback_data="admin_list_promocodes")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="admin_settings")]
+    ])
+    return keyboard
+
+
+def get_admin_settings_keyboard() -> InlineKeyboardMarkup:
+    """Клавиатура настроек (админ)"""
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="🔧 Режим обслуживания", callback_data="admin_toggle_maintenance")],
+        [InlineKeyboardButton(text="🎫 Управление промокодами", callback_data="admin_promocodes")],
+        [InlineKeyboardButton(text="⚙️ Настройка бонусов", callback_data="admin_bonus_settings")],
+        [InlineKeyboardButton(text="◀️ Назад", callback_data="admin_panel")]
+    ])
+    return keyboard
+
+
+# Алиасы для обратной совместимости с handlers/tasks.py
+tasks_keyboard_alias = tasks_keyboard
+task_detail_keyboard_alias = task_detail_keyboard
+confirm_keyboard_alias = confirm_keyboard
+back_keyboard_alias = back_keyboard
+task_approve_keyboard_alias = task_approve_keyboard

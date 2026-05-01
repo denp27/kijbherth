@@ -1,4 +1,43 @@
+# Основной фреймворк для ботов
 aiogram==3.10.0
-python-dotenv==1.0.0
+
+# Или если используете старую версию (python-telegram-bot)
+# python-telegram-bot==20.7
+
+# Базы данных
+asyncpg==0.29.0  # для PostgreSQL
+aiosqlite==0.19.0  # для SQLite
+sqlalchemy==2.0.25  # ORM
+
+# Дополнительные утилиты
+redis==5.0.1  # для кэширования/очередей
+python-dotenv==1.0.0  # для переменных окружения
+
+# Задачи и планировщик
+apscheduler==3.10.4
+
+# HTTP запросы
 aiohttp==3.9.1
-aiosend>=1.0.3
+requests==2.31.0
+
+# Работа с датами
+python-dateutil==2.8.2
+pytz==2023.3
+
+# Логирование и отладка
+loguru==0.7.2
+
+# Валидация данных
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Для реферальной системы (парсинг User-Agent и т.д.)
+user-agents==2.2.0
+fake-useragent==1.4.0
+
+# Для работы с JSON
+ujson==5.9.0
+orjson==3.9.10
+
+# Для шифрования (если нужно)
+cryptography==41.0.7

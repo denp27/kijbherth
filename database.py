@@ -621,30 +621,34 @@ def get_stats() -> Dict:
     c.execute("SELECT COUNT(*) FROM users")
     total_users = c.fetchone()[0]
     
-    c.execute("SELECT SUM(price) FROM purchases WHERE status = 'completed'")
-    total_revenue = c.fetchone()[0] or 0
+    c.execute("SELECT COALESCE(SUM(price), 0) FROM purchases WHERE status = 'completed'")
+    total_revenue = c.fetchone()[0]
     
     c.execute("SELECT COUNT(*) FROM purchases WHERE status = 'completed'")
-    total_purchases = c.fetchone()[0] or 0
+    total_purchases = c.fetchone()[0]
     
-    c.execute("SELECT SUM(amount) FROM purchases WHERE type = 'stars' AND status = 'completed'")
-    total_stars_sold = c.fetchone()[0] or 0
+    c.execute("SELECT COALESCE(SUM(amount), 0) FROM purchases WHERE type = 'stars' AND status = 'completed'")
+    total_stars_sold = c.fetchone()[0]
     
     c.execute("SELECT COUNT(*) FROM purchases WHERE type = 'premium' AND status = 'completed'")
-    total_premium_sold = c.fetchone()[0] or 0
+    total_premium_sold = c.fetchone()[0]
     
-    c.execute("SELECT SUM(referral_earnings) FROM users")
-    total_referral_paid = c.fetchone()[0] or 0
+    c.execute("SELECT COALESCE(SUM(referral_earnings), 0) FROM users")
+    total_referral_paid = c.fetchone()[0]
     
     c.execute("SELECT COUNT(*) FROM user_tasks WHERE status = 'pending'")
-    pending_tasks = c.fetchone()[0] or 0
+    pending_tasks = c.fetchone()[0]
     
-    c.execute("SELECT SUM(reward) FROM user_tasks WHERE status = 'approved'")
-    total_rewards_paid = c.fetchone()[0] or 0
+    # ИСПРАВЛЕНО: используем JOIN для получения reward из таблицы tasks
+    c.execute('''SELECT COALESCE(SUM(t.reward), 0) 
+                 FROM user_tasks ut 
+                 LEFT JOIN tasks t ON ut.task_id = t.id 
+                 WHERE ut.status = 'approved' ''')
+    total_rewards_paid = c.fetchone()[0]
     
     today = datetime.now().date()
-    c.execute("SELECT SUM(price) FROM purchases WHERE status = 'completed' AND DATE(completed_at) = ?", (today,))
-    today_revenue = c.fetchone()[0] or 0
+    c.execute("SELECT COALESCE(SUM(price), 0) FROM purchases WHERE status = 'completed' AND DATE(completed_at) = ?", (today,))
+    today_revenue = c.fetchone()[0]
     
     conn.close()
     
@@ -659,7 +663,6 @@ def get_stats() -> Dict:
         'total_rewards_paid': total_rewards_paid,
         'today_revenue': today_revenue
     }
-
 
 def get_setting(key: str) -> Optional[str]:
     """Get a setting value"""

@@ -1,13 +1,18 @@
+# handlers/admin.py
 from aiogram import Router, F
 from aiogram.types import CallbackQuery, Message, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import asyncio
+import sys
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).parent.parent))
 
 from database import get_all_users, get_user, ban_user, unban_user, update_balance, get_stats, add_promocode, get_user_purchases
-from keyboards.inline import get_admin_menu, get_admin_users_list, get_admin_user_actions, get_mailing_keyboard, get_mailing_confirm_keyboard, get_admin_prices_keyboard, get_back_to_main_keyboard
-from config import ADMIN_IDS, STARS_PRICES, PREMIUM_PRICES, get_premium_emoji
+from keyboards import get_admin_menu, get_admin_users_list, get_admin_user_actions, get_mailing_keyboard, get_mailing_confirm_keyboard, get_admin_prices_keyboard, get_back_to_main_keyboard
+from config import ADMIN_IDS, STARS_PRICES, PREMIUM_PRICES
 
 router = Router()
 
@@ -30,7 +35,7 @@ async def admin_panel(callback: CallbackQuery):
         return
     
     stats = get_stats()
-    text = f"""{get_premium_emoji()} <b>Админ панель</b> {get_premium_emoji()}
+    text = f"""🔧 Админ панель
 
 👥 Пользователей: {stats['total_users']}
 💰 Выручка: {stats['total_revenue']}₽
@@ -40,7 +45,12 @@ async def admin_panel(callback: CallbackQuery):
 👥 Реферальных выплат: {stats['total_referral_paid']}₽
 📈 Выручка сегодня: {stats['today_revenue']}₽"""
     
-    await callback.message.edit_text(text, reply_markup=get_admin_menu(), parse_mode="HTML")
+    try:
+        await callback.message.edit_text(text, reply_markup=get_admin_menu())
+    except:
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=get_admin_menu())
+    
     await callback.answer()
 
 
@@ -51,11 +61,19 @@ async def admin_users(callback: CallbackQuery, page: int = 0):
         return
     
     users = get_all_users()
-    await callback.message.edit_text(
-        f"{get_premium_emoji()} <b>Список пользователей</b>",
-        reply_markup=get_admin_users_list(users, page),
-        parse_mode="HTML"
-    )
+    
+    try:
+        await callback.message.edit_text(
+            "👥 Список пользователей",
+            reply_markup=get_admin_users_list(users, page)
+        )
+    except:
+        await callback.message.delete()
+        await callback.message.answer(
+            "👥 Список пользователей",
+            reply_markup=get_admin_users_list(users, page)
+        )
+    
     await callback.answer()
 
 
@@ -74,17 +92,26 @@ async def admin_user_detail(callback: CallbackQuery):
     user_id = int(callback.data.split("_")[2])
     user = get_user(user_id)
     
-    text = f"""{get_premium_emoji()} <b>Информация о пользователе</b> {get_premium_emoji()}
-
-🆔 ID: <code>{user['user_id']}</code>
-👤 Имя: {user['first_name'] or user['username'] or 'Без имени'}
-💰 Баланс: {user['balance']}₽
-👥 Рефералов: {user['referral_count']}
-🎁 Заработано: {user['referral_earnings']}₽
-📅 Регистрация: {user['registered_at'][:10] if user['registered_at'] else 'Неизвестно'}
-🚫 Статус: {'🔴 Забанен' if user['is_banned'] else '🟢 Активен'}"""
+    registered_at = user.get('registered_at', 'Неизвестно')
+    if registered_at and len(registered_at) > 10:
+        registered_at = registered_at[:10]
     
-    await callback.message.edit_text(text, reply_markup=get_admin_user_actions(user_id, user['is_banned']), parse_mode="HTML")
+    text = f"""👤 Информация о пользователе
+
+🆔 ID: {user['user_id']}
+👤 Имя: {user.get('first_name') or user.get('username') or 'Без имени'}
+💰 Баланс: {user.get('balance', 0)}₽
+👥 Рефералов: {user.get('referral_count', 0)}
+🎁 Заработано: {user.get('referral_earnings', 0)}₽
+📅 Регистрация: {registered_at}
+🚫 Статус: {'🔴 Забанен' if user.get('is_banned') else '🟢 Активен'}"""
+    
+    try:
+        await callback.message.edit_text(text, reply_markup=get_admin_user_actions(user_id, user.get('is_banned', False)))
+    except:
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=get_admin_user_actions(user_id, user.get('is_banned', False)))
+    
     await callback.answer()
 
 
@@ -97,14 +124,18 @@ async def admin_ban(callback: CallbackQuery):
     user_id = int(callback.data.split("_")[2])
     user = get_user(user_id)
     
-    if user['is_banned']:
+    if user.get('is_banned'):
         unban_user(user_id)
-        await callback.answer("✅ Разбанен")
+        await callback.answer("✅ Пользователь разбанен")
     else:
         ban_user(user_id)
-        await callback.answer("🔒 Забанен")
+        await callback.answer("🔒 Пользователь забанен")
     
     await admin_user_detail(callback)
+
+
+class AddBalanceState(StatesGroup):
+    waiting_for_amount = State()
 
 
 @router.callback_query(F.data.startswith("admin_add_balance_"))
@@ -115,12 +146,12 @@ async def admin_add_balance(callback: CallbackQuery, state: FSMContext):
     
     user_id = int(callback.data.split("_")[3])
     await state.update_data(balance_user_id=user_id)
-    await callback.message.answer("💰 Введите сумму для пополнения:")
-    await state.set_state(MailingState.waiting_for_content)
+    await callback.message.answer("💰 Введите сумму для пополнения (в рублях):")
+    await state.set_state(AddBalanceState.waiting_for_amount)
     await callback.answer()
 
 
-@router.message(MailingState.waiting_for_content)
+@router.message(AddBalanceState.waiting_for_amount)
 async def process_admin_balance(message: Message, state: FSMContext):
     try:
         amount = float(message.text.replace(",", "."))
@@ -140,16 +171,25 @@ async def admin_user_history(callback: CallbackQuery):
         return
     
     user_id = int(callback.data.split("_")[3])
+    user = get_user(user_id)
     purchases = get_user_purchases(user_id, 10)
     
     if not purchases:
         text = "📜 Нет покупок"
     else:
-        text = f"{get_premium_emoji()} <b>История покупок</b>\n\n"
+        text = "📜 История покупок\n\n"
         for p in purchases:
-            text += f"• Заказ #{p['order_number']}: {p['type'].upper()} - {p['price']}₽ ({p['created_at'][:10]})\n"
+            created_at = p.get('created_at', 'Неизвестно')
+            if created_at and len(created_at) > 10:
+                created_at = created_at[:10]
+            text += f"• Заказ #{p.get('order_number', 'N/A')}: {p.get('type', 'N/A').upper()} - {p.get('price', 0)}₽ ({created_at})\n"
     
-    await callback.message.edit_text(text, reply_markup=get_admin_user_actions(user_id, user['is_banned']), parse_mode="HTML")
+    try:
+        await callback.message.edit_text(text, reply_markup=get_admin_user_actions(user_id, user.get('is_banned', False)))
+    except:
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=get_admin_user_actions(user_id, user.get('is_banned', False)))
+    
     await callback.answer()
 
 
@@ -160,7 +200,7 @@ async def admin_stats(callback: CallbackQuery):
         return
     
     stats = get_stats()
-    text = f"""{get_premium_emoji()} <b>Статистика</b> {get_premium_emoji()}
+    text = f"""📊 Статистика
 
 👥 Пользователей: {stats['total_users']}
 💰 Выручка: {stats['total_revenue']}₽
@@ -170,7 +210,12 @@ async def admin_stats(callback: CallbackQuery):
 👥 Реферальных выплат: {stats['total_referral_paid']}₽
 📈 Выручка сегодня: {stats['today_revenue']}₽"""
     
-    await callback.message.edit_text(text, reply_markup=get_admin_menu(), parse_mode="HTML")
+    try:
+        await callback.message.edit_text(text, reply_markup=get_admin_menu())
+    except:
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=get_admin_menu())
+    
     await callback.answer()
 
 
@@ -180,11 +225,18 @@ async def admin_mailing(callback: CallbackQuery):
         await callback.answer("❌ Нет доступа")
         return
     
-    await callback.message.edit_text(
-        f"{get_premium_emoji()} <b>Рассылка</b>\n\nВыберите тип:",
-        reply_markup=get_mailing_keyboard(),
-        parse_mode="HTML"
-    )
+    try:
+        await callback.message.edit_text(
+            "📨 Рассылка\n\nВыберите тип:",
+            reply_markup=get_mailing_keyboard()
+        )
+    except:
+        await callback.message.delete()
+        await callback.message.answer(
+            "📨 Рассылка\n\nВыберите тип:",
+            reply_markup=get_mailing_keyboard()
+        )
+    
     await callback.answer()
 
 
@@ -195,14 +247,8 @@ async def mailing_text(callback: CallbackQuery, state: FSMContext):
         return
     
     await callback.message.answer(
-        "📝 <b>Отправьте текст рассылки</b>\n\n"
-        "<b>Поддерживается HTML разметка:</b>\n"
-        "• <code>&lt;b&gt;жирный&lt;/b&gt;</code>\n"
-        "• <code>&lt;i&gt;курсив&lt;/i&gt;</code>\n"
-        "• <code>&lt;tg-emoji emoji-id=\"ID\"&gt; &lt;/tg-emoji&gt;</code> - премиум эмодзи\n\n"
-        "Пример с премиум эмодзи:\n"
-        "<code>&lt;tg-emoji emoji-id=\"5471952986970267163\"&gt; &lt;/tg-emoji&gt; <b>Акция!</b></code>",
-        parse_mode="HTML"
+        "📝 Отправьте текст рассылки\n\n"
+        "Текст будет отправлен всем пользователям."
     )
     await state.set_state(MailingState.waiting_for_content)
     await state.update_data(mailing_type="text")
@@ -216,10 +262,8 @@ async def mailing_media(callback: CallbackQuery, state: FSMContext):
         return
     
     await callback.message.answer(
-        "🖼️ <b>Отправьте медиафайл</b>\n\n"
-        "Подпись поддерживает HTML форматирование и премиум эмодзи.\n\n"
-        "Можно добавить инлайн кнопки (отдельным сообщением после медиа)",
-        parse_mode="HTML"
+        "🖼️ Отправьте медиафайл (фото или видео)\n\n"
+        "Подпись к медиа будет отправлена вместе с файлом."
     )
     await state.set_state(MailingState.waiting_for_content)
     await state.update_data(mailing_type="media")
@@ -240,11 +284,11 @@ async def process_mailing_content(message: Message, state: FSMContext):
         if message.photo:
             content["media_type"] = "photo"
             content["file_id"] = message.photo[-1].file_id
-            content["caption"] = message.caption
+            content["caption"] = message.caption or ""
         elif message.video:
             content["media_type"] = "video"
             content["file_id"] = message.video.file_id
-            content["caption"] = message.caption
+            content["caption"] = message.caption or ""
         else:
             await message.answer("❌ Отправьте фото или видео")
             return
@@ -253,9 +297,8 @@ async def process_mailing_content(message: Message, state: FSMContext):
     
     preview = content.get('text', content.get('caption', 'Медиа файл'))[:300]
     await message.answer(
-        f"{get_premium_emoji()} <b>Предпросмотр рассылки</b>\n\n{preview}\n\nОтправить всем пользователям?",
-        reply_markup=get_mailing_confirm_keyboard(),
-        parse_mode="HTML"
+        f"📨 Предпросмотр рассылки\n\n{preview}\n\nОтправить всем пользователям?",
+        reply_markup=get_mailing_confirm_keyboard()
     )
     await state.set_state(MailingState.waiting_for_confirmation)
 
@@ -270,7 +313,7 @@ async def mailing_send(callback: CallbackQuery, state: FSMContext):
     content = data.get('content')
     
     if not content:
-        await callback.answer("Ошибка")
+        await callback.answer("❌ Ошибка: нет контента")
         return
     
     await callback.message.edit_text("🔄 Начинаю рассылку...")
@@ -280,28 +323,27 @@ async def mailing_send(callback: CallbackQuery, state: FSMContext):
     failed = 0
     
     for user in users:
-        if user['is_banned']:
+        if user.get('is_banned'):
             continue
         try:
             if content['type'] == "text":
-                await callback.bot.send_message(user['user_id'], content['text'], parse_mode="HTML")
+                await callback.bot.send_message(user['user_id'], content['text'])
             else:
                 if content['media_type'] == "photo":
-                    await callback.bot.send_photo(user['user_id'], content['file_id'], caption=content.get('caption'), parse_mode="HTML")
+                    await callback.bot.send_photo(user['user_id'], content['file_id'], caption=content.get('caption'))
                 elif content['media_type'] == "video":
-                    await callback.bot.send_video(user['user_id'], content['file_id'], caption=content.get('caption'), parse_mode="HTML")
+                    await callback.bot.send_video(user['user_id'], content['file_id'], caption=content.get('caption'))
             sent += 1
         except:
             failed += 1
         await asyncio.sleep(0.05)
     
     await callback.message.edit_text(
-        f"{get_premium_emoji()} <b>Рассылка завершена!</b>\n\n"
+        f"📨 Рассылка завершена!\n\n"
         f"✅ Успешно: {sent}\n"
         f"❌ Ошибок: {failed}\n"
-        f"👥 Всего: {len(users)}",
-        reply_markup=get_admin_menu(),
-        parse_mode="HTML"
+        f"👥 Всего пользователей: {len(users)}",
+        reply_markup=get_admin_menu()
     )
     await state.clear()
     await callback.answer()
@@ -310,7 +352,7 @@ async def mailing_send(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "mailing_cancel")
 async def mailing_cancel(callback: CallbackQuery, state: FSMContext):
     await state.clear()
-    await callback.message.edit_text("❌ Отменено", reply_markup=get_admin_menu())
+    await callback.message.edit_text("❌ Рассылка отменена", reply_markup=get_admin_menu())
     await callback.answer()
 
 
@@ -320,12 +362,8 @@ async def admin_promocodes(callback: CallbackQuery, state: FSMContext):
         await callback.answer("❌ Нет доступа")
         return
     
-    from database import get_promocode
-    
     await callback.message.answer(
-        "🎟️ <b>Создание промокода</b>\n\n"
-        "Введите код промокода (буквы и цифры):",
-        parse_mode="HTML"
+        "🎟️ Создание промокода\n\nВведите код промокода (буквы и цифры):"
     )
     await state.set_state(PromoState.waiting_for_code)
     await callback.answer()
@@ -360,12 +398,11 @@ async def process_promo_uses(message: Message, state: FSMContext):
         add_promocode(data['code'], data['reward'], uses, datetime.now() + timedelta(days=365))
         
         await message.answer(
-            f"✅ <b>Промокод создан!</b>\n\n"
-            f"🎟️ Код: <code>{data['code']}</code>\n"
+            f"✅ Промокод создан!\n\n"
+            f"🎟️ Код: {data['code']}\n"
             f"💰 Награда: {data['reward']}₽\n"
             f"🔢 Макс. использований: {uses}\n"
             f"📅 Действует: 1 год",
-            parse_mode="HTML",
             reply_markup=get_admin_menu()
         )
         await state.clear()
@@ -379,16 +416,29 @@ async def admin_prices(callback: CallbackQuery):
         await callback.answer("❌ Нет доступа")
         return
     
-    text = f"{get_premium_emoji()} <b>Управление ценами</b>\n\n⭐ <b>Stars:</b>\n"
+    text = "⚙️ Управление ценами\n\n⭐ Stars:\n"
     for stars, price in STARS_PRICES.items():
         text += f"• {stars} ⭐ - {price}₽\n"
     
-    text += f"\n💎 <b>Premium:</b>\n"
+    text += f"\n💎 Premium:\n"
     for months, price in PREMIUM_PRICES.items():
         text += f"• {months} мес - {price}₽\n"
     
-    await callback.message.edit_text(text, reply_markup=get_admin_prices_keyboard(), parse_mode="HTML")
+    try:
+        await callback.message.edit_text(text, reply_markup=get_admin_prices_keyboard())
+    except:
+        await callback.message.delete()
+        await callback.message.answer(text, reply_markup=get_admin_prices_keyboard())
+    
     await callback.answer()
+
+
+class EditStarsState(StatesGroup):
+    waiting_for_prices = State()
+
+
+class EditPremiumState(StatesGroup):
+    waiting_for_prices = State()
 
 
 @router.callback_query(F.data == "admin_edit_stars")
@@ -398,18 +448,17 @@ async def admin_edit_stars(callback: CallbackQuery, state: FSMContext):
         return
     
     await callback.message.answer(
-        "⭐ <b>Изменение цен на Stars</b>\n\n"
+        "⭐ Изменение цен на Stars\n\n"
         "Введите новые цены в формате:\n"
-        "<code>количество:цена количество:цена</code>\n\n"
+        "количество:цена количество:цена\n\n"
         "Пример:\n"
-        "<code>50:69 100:119 250:249</code>",
-        parse_mode="HTML"
+        "50:69 100:119 250:249"
     )
-    await state.set_state(MailingState.waiting_for_content)
+    await state.set_state(EditStarsState.waiting_for_prices)
     await callback.answer()
 
 
-@router.message(MailingState.waiting_for_content)
+@router.message(EditStarsState.waiting_for_prices)
 async def process_edit_stars(message: Message, state: FSMContext):
     try:
         parts = message.text.split()
@@ -430,18 +479,17 @@ async def admin_edit_premium(callback: CallbackQuery, state: FSMContext):
         return
     
     await callback.message.answer(
-        "💎 <b>Изменение цен на Premium</b>\n\n"
+        "💎 Изменение цен на Premium\n\n"
         "Введите новые цены в формате:\n"
-        "<code>месяцы:цена месяцы:цена</code>\n\n"
+        "месяцы:цена месяцы:цена\n\n"
         "Пример:\n"
-        "<code>3:349 6:549 12:849</code>",
-        parse_mode="HTML"
+        "3:349 6:549 12:849"
     )
-    await state.set_state(MailingState.waiting_for_content)
+    await state.set_state(EditPremiumState.waiting_for_prices)
     await callback.answer()
 
 
-@router.message(MailingState.waiting_for_content)
+@router.message(EditPremiumState.waiting_for_prices)
 async def process_edit_premium(message: Message, state: FSMContext):
     try:
         parts = message.text.split()

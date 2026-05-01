@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-BOT_TOKEN = "7867924002:AAHtXRQoZXuaL7IhnGqD03pTf4yzWIIAVz4"
+BOT_TOKEN = ""
 
 # ID премиум эмодзи для кнопок
 PREMIUM_EMOJI_IDS = {
